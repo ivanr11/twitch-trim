@@ -7,7 +7,7 @@
     "dev": "ts-node src/app.ts",
     "build": "tsc",
     "serve": "node dist/app.js",
-    "test": "jest"
+    "test": "jest --watchAll --verbose"
   },
   "author": "",
   "license": "ISC",
