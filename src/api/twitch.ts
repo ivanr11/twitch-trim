@@ -1,20 +1,19 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 import { GetClipsQueryParams, Clip } from '../types/twitchTypes';
+import config from '../config';
 
-dotenv.config();
+
+const baseUrl = 'https://api.twitch.tv/helix';
+const instance = axios.create({
+    baseURL: baseUrl,
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': config.ACCESS_TOKEN,
+        'Client-id': config.CLIENT_ID,
+    }
+});
 
 export async function getClips(queryParams: GetClipsQueryParams): Promise<Clip[]> {
-    const baseUrl = 'https://api.twitch.tv/helix';
-    const instance = axios.create({
-        baseURL: baseUrl,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': process.env.ACCESS_TOKEN,
-            'Client-id': process.env.CLIENT_ID,
-        }
-    });
-
     try {
         const response = await instance.get('/clips', {
             params: {
