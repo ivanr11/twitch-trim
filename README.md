@@ -5,6 +5,7 @@ A web application that gathers the most popular Twitch clips based on category o
 ### Prerequisites
 * [Node.js](https://nodejs.org) and npm installed.
 * [FFmpeg](https://ffmpeg.org/) installed (for video processing).
+* [Streamlink](https://streamlink.github.io/) installed (for clip downloading).
 * Twitch and YouTube API credentials
 
 ### Setup
