@@ -6,18 +6,15 @@ import { Config } from "../config";
 
 export async function createVideo(clips: Clip[]) {
 	setupDirectories();
-	// FFmpeg component (createVideo)
-	// -- Download the raw clips fetched from Twitch (downloadClips())
-	// -- Process the raw clips (how to process?) into folder (processClips())
-	//      -- Scale to 1920x1080 (must have same resolution and aspect ratio)
-	// -- Use FFmpeg to concatenate processed clips into single video (how?) (concatenateClips())
 
-	await downloadClips(clips);
-	await processClips();
+	downloadClips(clips);
+	processClips();
+	concatenateClips();
 }
 
-export async function downloadClips(clips: Clip[]) {
+export function downloadClips(clips: Clip[]) {
 	console.log(`Downloading clips to ${config.LOCAL_RAW_CLIPS_PATH}...`);
+
 	// Download each clip
 	for (const clip of clips) {
 		try {
@@ -26,25 +23,15 @@ export async function downloadClips(clips: Clip[]) {
 			);
 			console.log(`Downloaded clip ${clip.id}`);
 		} catch (error) {
-			console.error("Exec error:", error);
+			console.error(error);
 		}
-
-		// exec(
-		// 	`streamlink --output ${config.LOCAL_RAW_CLIPS_PATH}/${clip.id}.mp4 ${clip.url} best`,
-		// )
-		// 	.on("error", (error) => {
-		// 		console.error("Exec error:", error);
-		// 	})
-		// 	.on("close", () => {
-		// 		console.log(`Downloaded clip ${clip.id}`);
-		// 	});
 	}
+
 	console.log("All clips downloaded");
 }
 
-export async function processClips() {
+export function processClips() {
 	console.log("Processing clips...");
-	// process each clip to be same resolution (1920x1080), aspect ratio(16:9), and same codecs (H.264, MPEG AAC Audio mp4A)
 
 	const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH as string;
 	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH as string;
@@ -53,18 +40,12 @@ export async function processClips() {
 	fs.readdirSync(localRawClipsPath).forEach((file) => {
 		try {
 			execSync(
-				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 ${localProcessedClipsPath}/${file}`,
+				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
 			);
 			console.log(`Processed clip ${file}`);
 		} catch (error) {
 			console.error("Exec error:", error);
 		}
-
-		// exec(
-		// 	`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 ${localProcessedClipsPath}/${file}`,
-		// ).on("close", () => {
-		// 	console.log(`Processed clip ${localRawClipsPath}/${file}`);
-		// });
 	});
 	console.log("All clips processed");
 	// TODO: Skip reencoding if not needed
@@ -81,9 +62,29 @@ export async function processClips() {
 	// });
 }
 
-// function concatenateClips() {
-// 	// Concatenate all clips in processed-clips directory (will all be of same codec)
-// }
+export function concatenateClips() {
+	console.log("Concatenating clips...");
+	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
+	// const outputFileName = '';
+	// const outputFilePath = '';
+	// Concatenate all clips in processed-clips directory (will all be of same codec)
+	// 1. Execture for loop to copy every file in processed clips directory into mylist.txt for concatenation
+	try {
+		execSync(
+			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > mylist.txt`,
+		);
+	} catch (error) {
+		console.error(error);
+	}
+	// 2. concat the videos in mylist.txt
+	try {
+		execSync("ffmpeg -f concat -i mylist.txt -c copy output.mp4 -v error");
+	} catch (error) {
+		console.error(error);
+	}
+
+	console.log("Clips concatenated");
+}
 
 function getConfigKey(dirPath: string): keyof Config | undefined {
 	if (dirPath === config.LOCAL_RAW_CLIPS_PATH) {
