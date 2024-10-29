@@ -5,11 +5,15 @@ import config from "../config";
 import { Config } from "../config";
 
 export async function createVideo(clips: Clip[]) {
-	setupDirectories();
+	try {
+		setupDirectories();
 
-	downloadClips(clips);
-	processClips();
-	concatenateClips();
+		downloadClips(clips);
+		processClips();
+		concatenateClips();
+	} catch (error) {
+		throw new Error(`Error creating video: ${error}`);
+	}
 }
 
 export function downloadClips(clips: Clip[]) {
@@ -23,7 +27,7 @@ export function downloadClips(clips: Clip[]) {
 			);
 			console.log(`Downloaded clip ${clip.id}`);
 		} catch (error) {
-			console.error(error);
+			throw new Error(`Error downloading clips: ${error}`);
 		}
 	}
 
@@ -44,9 +48,10 @@ export function processClips() {
 			);
 			console.log(`Processed clip ${file}`);
 		} catch (error) {
-			console.error("Exec error:", error);
+			throw new Error(`Error processing clips: ${error}`);
 		}
 	});
+
 	console.log("All clips processed");
 	// TODO: Skip reencoding if not needed
 	// TODO: Only process if clips aren't of same resolution OR aspect ratio
@@ -64,23 +69,20 @@ export function processClips() {
 
 export function concatenateClips() {
 	console.log("Concatenating clips...");
-	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
 	// const outputFileName = '';
 	// const outputFilePath = '';
-	// Concatenate all clips in processed-clips directory (will all be of same codec)
-	// 1. Execture for loop to copy every file in processed clips directory into mylist.txt for concatenation
+
+	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
+
 	try {
+		// copy files in processed clips directory into txt file for concatenation
 		execSync(
 			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > mylist.txt`,
 		);
-	} catch (error) {
-		console.error(error);
-	}
-	// 2. concat the videos in mylist.txt
-	try {
+		// concatenate clips listed in txt file
 		execSync("ffmpeg -f concat -i mylist.txt -c copy output.mp4 -v error");
 	} catch (error) {
-		console.error(error);
+		throw new Error(`Error concatenating clips: ${error}`);
 	}
 
 	console.log("Clips concatenated");
