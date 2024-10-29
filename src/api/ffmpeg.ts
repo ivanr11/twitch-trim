@@ -4,7 +4,7 @@ import { Clip } from "../types/twitchTypes";
 import config from "../config";
 import { Config } from "../config";
 
-export async function createVideo(clips: Clip[]) {
+export function createVideo(clips: Clip[]) {
 	try {
 		setupDirectories();
 
@@ -16,14 +16,17 @@ export async function createVideo(clips: Clip[]) {
 	}
 }
 
+const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH;
+const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
+
 export function downloadClips(clips: Clip[]) {
-	console.log(`Downloading clips to ${config.LOCAL_RAW_CLIPS_PATH}...`);
+	console.log(`Downloading clips to /${localRawClipsPath}...`);
 
 	// Download each clip
 	for (const clip of clips) {
 		try {
 			execSync(
-				`streamlink --output ${config.LOCAL_RAW_CLIPS_PATH}/${clip.id}.mp4 ${clip.url} best`,
+				`streamlink --output ${localRawClipsPath}/${clip.id}.mp4 ${clip.url} best`,
 			);
 			console.log(`Downloaded clip ${clip.id}`);
 		} catch (error) {
@@ -37,11 +40,8 @@ export function downloadClips(clips: Clip[]) {
 export function processClips() {
 	console.log("Processing clips...");
 
-	const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH as string;
-	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH as string;
-
 	// process each clip
-	fs.readdirSync(localRawClipsPath).forEach((file) => {
+	fs.readdirSync(localRawClipsPath as string).forEach((file) => {
 		try {
 			execSync(
 				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
@@ -69,10 +69,7 @@ export function processClips() {
 
 export function concatenateClips() {
 	console.log("Concatenating clips...");
-	// const outputFileName = '';
-	// const outputFilePath = '';
-
-	const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
+	const outputFileName = config.OUTPUT_FILE_NAME;
 
 	try {
 		// copy files in processed clips directory into txt file for concatenation
@@ -80,7 +77,9 @@ export function concatenateClips() {
 			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > mylist.txt`,
 		);
 		// concatenate clips listed in txt file
-		execSync("ffmpeg -f concat -i mylist.txt -c copy output.mp4 -v error");
+		execSync(
+			`ffmpeg -f concat -i mylist.txt -c copy ${outputFileName}.mp4 -v error`,
+		);
 	} catch (error) {
 		throw new Error(`Error concatenating clips: ${error}`);
 	}
@@ -89,9 +88,9 @@ export function concatenateClips() {
 }
 
 function getConfigKey(dirPath: string): keyof Config | undefined {
-	if (dirPath === config.LOCAL_RAW_CLIPS_PATH) {
+	if (dirPath === localRawClipsPath) {
 		return "LOCAL_RAW_CLIPS_PATH";
-	} else if (dirPath === config.LOCAL_PROCESSED_CLIPS_PATH) {
+	} else if (dirPath === localProcessedClipsPath) {
 		return "LOCAL_PROCESSED_CLIPS_PATH";
 	} else {
 		return undefined;
@@ -114,6 +113,6 @@ function ensureDirectoryExistence(dirPath: string) {
 }
 
 function setupDirectories() {
-	ensureDirectoryExistence(config.LOCAL_RAW_CLIPS_PATH as string);
-	ensureDirectoryExistence(config.LOCAL_PROCESSED_CLIPS_PATH as string);
+	ensureDirectoryExistence(localRawClipsPath as string);
+	ensureDirectoryExistence(localProcessedClipsPath as string);
 }
