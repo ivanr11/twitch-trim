@@ -7,12 +7,15 @@ import { Config } from "../config";
 export function createVideo(clips: Clip[]) {
 	try {
 		setupDirectories();
+		clearFiles();
 
 		downloadClips(clips);
 		processClips();
 		concatenateClips();
+
+		console.log("Done");
 	} catch (error) {
-		throw new Error(`Error creating video: ${error}`);
+		throw new Error(error as string);
 	}
 }
 
@@ -30,11 +33,9 @@ export function downloadClips(clips: Clip[]) {
 			);
 			console.log(`Downloaded clip ${clip.id}`);
 		} catch (error) {
-			throw new Error(`Error downloading clips: ${error}`);
+			console.error(error);
 		}
 	}
-
-	console.log("All clips downloaded");
 }
 
 export function processClips() {
@@ -48,43 +49,27 @@ export function processClips() {
 			);
 			console.log(`Processed clip ${file}`);
 		} catch (error) {
-			throw new Error(`Error processing clips: ${error}`);
+			console.error(error);
 		}
 	});
-
-	console.log("All clips processed");
-	// TODO: Skip reencoding if not needed
-	// TODO: Only process if clips aren't of same resolution OR aspect ratio
-	// fs.readdirSync(localRawClipsPath).forEach((file) => {
-	// 	const ffprobe = exec(
-	// 		`ffprobe ${file} -show_entries stream=display_aspect_ratio,width,height -of csv=s=x:p=0`,
-	// 	);
-	// 	let output = "";
-	// 	ffprobe.stdout?.on("data", (data) => {
-	// 		output += data.toString();
-	// 	});
-	// 	console.log(output);
-	// });
 }
 
 export function concatenateClips() {
 	console.log("Concatenating clips...");
-	const outputFileName = config.OUTPUT_FILE_NAME;
+	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
 
 	try {
 		// copy files in processed clips directory into txt file for concatenation
 		execSync(
-			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > mylist.txt`,
+			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > filelist.txt`,
 		);
 		// concatenate clips listed in txt file
 		execSync(
-			`ffmpeg -f concat -i mylist.txt -c copy ${outputFileName}.mp4 -v error`,
+			`ffmpeg -f concat -i filelist.txt -c copy ${outputFileName} -v error`,
 		);
 	} catch (error) {
-		throw new Error(`Error concatenating clips: ${error}`);
+		console.error(error);
 	}
-
-	console.log("Clips concatenated");
 }
 
 function getConfigKey(dirPath: string): keyof Config | undefined {
@@ -106,13 +91,33 @@ function ensureDirectoryExistence(dirPath: string) {
 		);
 	}
 
-	if (!fs.existsSync(dirPath)) {
-		fs.mkdirSync(dirPath, { recursive: true });
-		console.log(`Path created at: ${dirPath}`);
+	fs.mkdirSync(dirPath, { recursive: true });
+	console.log(`Path created at: /${dirPath}`);
+}
+
+function clearFiles() {
+	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
+	if (fs.existsSync(outputFileName)) {
+		fs.rmSync(`${outputFileName}`);
+	}
+
+	if (fs.existsSync("filelist.txt")) {
+		fs.rmSync("filelist.txt");
+	}
+}
+
+function clearDirectories() {
+	if (fs.existsSync(`./${localRawClipsPath}`)) {
+		fs.rmSync(localRawClipsPath as string, { recursive: true });
+	}
+
+	if (fs.existsSync(`./${localProcessedClipsPath}`)) {
+		fs.rmSync(localProcessedClipsPath as string, { recursive: true });
 	}
 }
 
 function setupDirectories() {
+	clearDirectories();
 	ensureDirectoryExistence(localRawClipsPath as string);
 	ensureDirectoryExistence(localProcessedClipsPath as string);
 }
