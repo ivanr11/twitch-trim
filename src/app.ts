@@ -10,8 +10,12 @@ const queryParams: GetClipsQueryParams = {
 };
 
 async function test() {
-	const clips = await getClips(queryParams);
-	createVideo(clips);
+	try {
+		const clips = await getClips(queryParams);
+		createVideo(clips);
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 test();
