@@ -1,8 +1,8 @@
 import fs from "fs";
 import { execSync } from "child_process";
-import { Clip } from "../types/twitchTypes";
-import config from "../config";
-import { Config } from "../config";
+import { Clip } from "../../types/twitchTypes";
+import config from "../../config";
+import { Config } from "../../config";
 
 export function createVideo(clips: Clip[]) {
 	try {
