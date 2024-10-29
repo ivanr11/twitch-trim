@@ -106,7 +106,7 @@ function clearFiles() {
 	}
 }
 
-function clearDirectories() {
+export function clearDirectories() {
 	if (fs.existsSync(`./${localRawClipsPath}`)) {
 		fs.rmSync(localRawClipsPath as string, { recursive: true });
 	}
@@ -116,7 +116,7 @@ function clearDirectories() {
 	}
 }
 
-function setupDirectories() {
+export function setupDirectories() {
 	clearDirectories();
 	ensureDirectoryExistence(localRawClipsPath as string);
 	ensureDirectoryExistence(localProcessedClipsPath as string);
