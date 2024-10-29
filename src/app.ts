@@ -1,6 +1,6 @@
 // import express from 'express';
-import { getClips } from "./api/twitch";
-import { createVideo } from "./api/ffmpeg";
+import { getClips } from "./api/twitch/twitch";
+import { createVideo } from "./api/ffmpeg/ffmpeg";
 import { GetClipsQueryParams } from "./types/twitchTypes";
 
 const queryParams: GetClipsQueryParams = {
