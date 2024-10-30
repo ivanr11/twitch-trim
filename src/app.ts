@@ -2,6 +2,7 @@
 import { getClips } from "./api/twitch/twitch";
 import { createVideo } from "./api/ffmpeg/ffmpeg";
 import { GetClipsQueryParams } from "./types/twitchTypes";
+import logger from "./logger";
 
 const queryParams: GetClipsQueryParams = {
 	game_id: "33214",
@@ -14,19 +15,8 @@ async function test() {
 		const clips = await getClips(queryParams);
 		createVideo(clips);
 	} catch (error) {
-		console.error(error);
+		logger.error(error);
 	}
 }
 
 test();
-
-// const app = express();
-// const port = 3000;
-
-// app.get('/', (req, res) => {
-//     res.send('Hello world');
-// })
-
-// app.listen(port, () => {
-//     console.log(`App listening on port ${port}`)
-// })
