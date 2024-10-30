@@ -3,6 +3,7 @@ import { execSync } from "child_process";
 import { Clip } from "../../types/twitchTypes";
 import config from "../../config";
 import { Config } from "../../config";
+import logger from "../../logger";
 
 export function createVideo(clips: Clip[]) {
 	try {
@@ -13,9 +14,9 @@ export function createVideo(clips: Clip[]) {
 		processClips();
 		concatenateClips();
 
-		console.log("Done");
+		logger.info("createVideo :: done");
 	} catch (error) {
-		throw new Error(error as string);
+		throw new Error(`createVideo :: ${error}`);
 	}
 }
 
@@ -23,7 +24,7 @@ const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH;
 const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
 
 export function downloadClips(clips: Clip[]) {
-	console.log(`Downloading clips to /${localRawClipsPath}...`);
+	logger.info(`downloadClips :: Downloading clips to /${localRawClipsPath}...`);
 
 	// Download each clip
 	for (const clip of clips) {
@@ -31,15 +32,15 @@ export function downloadClips(clips: Clip[]) {
 			execSync(
 				`streamlink --output ${localRawClipsPath}/${clip.id}.mp4 ${clip.url} best`,
 			);
-			console.log(`Downloaded clip ${clip.id}`);
+			logger.info(`downloadClips :: Downloaded clip ${clip.id}`);
 		} catch (error) {
-			console.error(error);
+			logger.error(`downloadClips :: ${error}`);
 		}
 	}
 }
 
 export function processClips() {
-	console.log("Processing clips...");
+	logger.info("processClips :: Processing clips...");
 
 	// process each clip
 	fs.readdirSync(localRawClipsPath as string).forEach((file) => {
@@ -47,15 +48,15 @@ export function processClips() {
 			execSync(
 				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
 			);
-			console.log(`Processed clip ${file}`);
+			logger.info(`processClips :: Processed clip ${file}`);
 		} catch (error) {
-			console.error(error);
+			logger.error(`processClips :: ${error}`);
 		}
 	});
 }
 
 export function concatenateClips() {
-	console.log("Concatenating clips...");
+	logger.info("concatenateClips :: Concatenating clips...");
 	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
 
 	try {
@@ -68,7 +69,7 @@ export function concatenateClips() {
 			`ffmpeg -f concat -i filelist.txt -c copy ${outputFileName} -v error`,
 		);
 	} catch (error) {
-		console.error(error);
+		logger.error(`concatenateClips :: ${error}`);
 	}
 }
 
@@ -87,32 +88,38 @@ function ensureDirectoryExistence(dirPath: string) {
 
 	if (!configKey || !config[configKey]) {
 		throw new Error(
-			`Unexpected error: Missing path for ${configKey || "unknown key"}`,
+			`ensureDirectoryExistence :: Missing path for ${configKey || "unknown key"}`,
 		);
 	}
 
 	fs.mkdirSync(dirPath, { recursive: true });
-	console.log(`Path created at: /${dirPath}`);
+	logger.info(`ensureDirectoryExistence :: Path created at: /${dirPath}`);
 }
 
 function clearFiles() {
 	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
 	if (fs.existsSync(outputFileName)) {
 		fs.rmSync(`${outputFileName}`);
+		logger.info(`clearFiles :: Cleared output file "${outputFileName}"`);
 	}
 
 	if (fs.existsSync("filelist.txt")) {
 		fs.rmSync("filelist.txt");
+		logger.info('clearFiles :: Cleared output file "filelist.txt"');
 	}
 }
 
 export function clearDirectories() {
 	if (fs.existsSync(`./${localRawClipsPath}`)) {
 		fs.rmSync(localRawClipsPath as string, { recursive: true });
+		logger.info(`clearDirectories :: Cleared directory "${localRawClipsPath}"`);
 	}
 
 	if (fs.existsSync(`./${localProcessedClipsPath}`)) {
 		fs.rmSync(localProcessedClipsPath as string, { recursive: true });
+		logger.info(
+			`clearDirectories :: Cleared directory "${localProcessedClipsPath}"`,
+		);
 	}
 }
 
