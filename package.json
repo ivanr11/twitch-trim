@@ -9,7 +9,8 @@
 		"serve": "node dist/app.js",
 		"test": "jest --watchAll --verbose",
 		"format": "prettier --write .",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"sandbox": "ts-node src/scripts/sandbox.ts"
 	},
 	"author": "",
 	"license": "ISC",
