@@ -2,21 +2,25 @@ import axios from "axios";
 import { GetClipsQueryParams, Clip } from "../../types/twitchTypes";
 import config from "../../config";
 
-const baseUrl = "https://api.twitch.tv/helix";
-const instance = axios.create({
-	baseURL: baseUrl,
-	headers: {
-		"Content-Type": "application/json",
-		Authorization: config.ACCESS_TOKEN,
-		"Client-id": config.CLIENT_ID,
-	},
-});
+export function getClient() {
+	const baseUrl = "https://api.twitch.tv/helix";
+	const client = axios.create({
+		baseURL: baseUrl,
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: config.ACCESS_TOKEN,
+			"Client-id": config.CLIENT_ID,
+		},
+	});
+	return client;
+}
 
 export async function getClips(
 	queryParams: GetClipsQueryParams,
 ): Promise<Clip[]> {
 	try {
-		const response = await instance.get("/clips", {
+		const client = getClient();
+		const response = await client.get("/clips", {
 			params: {
 				...queryParams,
 			},
