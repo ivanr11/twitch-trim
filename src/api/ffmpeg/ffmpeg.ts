@@ -8,7 +8,6 @@ import logger from "../../logger";
 
 export async function createVideo(clips: Clip[]) {
 	try {
-		await setupDirectories();
 		await clearFiles("./", ".txt");
 		await clearFiles("./", ".mp4");
 		await downloadClips(clips);
@@ -21,8 +20,8 @@ export async function createVideo(clips: Clip[]) {
 	}
 }
 
-const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH;
-const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
+let localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH;
+let localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
 const exec = promisify(child_process.exec);
 
 export async function downloadClips(clips: Clip[]) {
@@ -112,8 +111,11 @@ async function clearFiles(dir: string, extension: string) {
 	}
 }
 
-export async function setupDirectories() {
+export async function setupDirectories(clip: Clip) {
 	try {
+		localRawClipsPath += `-${clip.game_id}-${Date.now()}`;
+		localProcessedClipsPath += `-${clip.game_id}-${Date.now()}`;
+
 		await ensureDirectoryExistence(`${localRawClipsPath}`);
 		await ensureDirectoryExistence(`${localProcessedClipsPath}`);
 	} catch (error) {
