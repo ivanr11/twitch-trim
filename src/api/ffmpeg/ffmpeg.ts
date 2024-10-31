@@ -1,4 +1,5 @@
-import util from "fs";
+import fs from "fs";
+import path from "path";
 import { execSync } from "child_process";
 import { Clip } from "../../types/twitchTypes";
 import config from "../../config";
@@ -7,7 +8,8 @@ import logger from "../../logger";
 
 export function createVideo(clips: Clip[]) {
 	try {
-		clearFiles();
+		clearFiles("./", ".txt");
+		clearFiles("./", ".mp4");
 
 		downloadClips(clips);
 		processClips();
@@ -51,7 +53,7 @@ export function processClips() {
 
 	// process each clip
 	try {
-		util.readdirSync(localRawClipsPath as string).forEach((file) => {
+		fs.readdirSync(localRawClipsPath as string).forEach((file) => {
 			execSync(
 				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
 			);
@@ -99,31 +101,35 @@ function ensureDirectoryExistence(dirPath: string) {
 		);
 	}
 
-	util.mkdirSync(dirPath, { recursive: true });
+	fs.mkdirSync(dirPath, { recursive: true });
 	logger.info(`ensureDirectoryExistence :: Path created at: /${dirPath}`);
 }
 
-function clearFiles() {
-	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
-	if (util.existsSync(outputFileName)) {
-		util.rmSync(`${outputFileName}`);
-		logger.info(`clearFiles :: Cleared output file "${outputFileName}"`);
-	}
+function clearFiles(dir: string, extension: string) {
+	try {
+		const files = fs.readdirSync(dir);
+		files.forEach((file) => {
+			const filePath = path.join(dir, file);
+			const fileExtension = path.extname(filePath);
 
-	if (util.existsSync("filelist.txt")) {
-		util.rmSync("filelist.txt");
-		logger.info('clearFiles :: Cleared output file "filelist.txt"');
+			if (fileExtension === extension.toLowerCase()) {
+				fs.unlinkSync(filePath);
+				logger.info(`Deleted file: ${filePath}`);
+			}
+		});
+	} catch (error) {
+		logger.error(`clearFiles :: ${error}`);
 	}
 }
 
 export function clearDirectories() {
-	if (util.existsSync(`./${localRawClipsPath}`)) {
-		util.rmSync(localRawClipsPath as string, { recursive: true });
+	if (fs.existsSync(`./${localRawClipsPath}`)) {
+		fs.rmSync(localRawClipsPath as string, { recursive: true });
 		logger.info(`clearDirectories :: Cleared directory "${localRawClipsPath}"`);
 	}
 
-	if (util.existsSync(`./${localProcessedClipsPath}`)) {
-		util.rmSync(localProcessedClipsPath as string, { recursive: true });
+	if (fs.existsSync(`./${localProcessedClipsPath}`)) {
+		fs.rmSync(localProcessedClipsPath as string, { recursive: true });
 		logger.info(
 			`clearDirectories :: Cleared directory "${localProcessedClipsPath}"`,
 		);
