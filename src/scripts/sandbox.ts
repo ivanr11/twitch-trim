@@ -12,8 +12,8 @@ const queryParams: GetClipsQueryParams = {
 async function testCurrentProject() {
 	try {
 		const clips = await getClips(queryParams);
-		setupDirectories();
-		createVideo(clips);
+		await setupDirectories(clips[0]);
+		await createVideo(clips);
 	} catch (error) {
 		logger.error(error);
 	}
