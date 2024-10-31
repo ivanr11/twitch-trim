@@ -1,5 +1,5 @@
 import { getClips } from "../api/twitch/twitch";
-import { createVideo } from "../api/ffmpeg/ffmpeg";
+import { createVideo, setupDirectories } from "../api/ffmpeg/ffmpeg";
 import { GetClipsQueryParams } from "../types/twitchTypes";
 import logger from "../logger";
 
@@ -12,6 +12,7 @@ const queryParams: GetClipsQueryParams = {
 async function testCurrentProject() {
 	try {
 		const clips = await getClips(queryParams);
+		setupDirectories();
 		createVideo(clips);
 	} catch (error) {
 		logger.error(error);

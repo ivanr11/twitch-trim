@@ -7,7 +7,6 @@ import logger from "../../logger";
 
 export function createVideo(clips: Clip[]) {
 	try {
-		setupDirectories();
 		clearFiles();
 
 		downloadClips(clips);
