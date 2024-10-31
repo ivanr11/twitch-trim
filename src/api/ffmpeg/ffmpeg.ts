@@ -4,7 +4,6 @@ import { promisify } from "node:util";
 import child_process from "node:child_process";
 import { Clip } from "../../types/twitchTypes";
 import config from "../../config";
-import { Config } from "../../config";
 import logger from "../../logger";
 
 export async function createVideo(clips: Clip[]) {
@@ -87,23 +86,8 @@ export async function concatenateClips() {
 	}
 }
 
-function getConfigKey(dirPath: string): keyof Config | undefined {
-	if (dirPath === localRawClipsPath) {
-		return "LOCAL_RAW_CLIPS_PATH";
-	} else if (dirPath === localProcessedClipsPath) {
-		return "LOCAL_PROCESSED_CLIPS_PATH";
-	} else {
-		return undefined;
-	}
-}
-
 async function ensureDirectoryExistence(dirPath: string) {
 	try {
-		const configKey = getConfigKey(dirPath);
-
-		if (!configKey || !config[configKey]) {
-			throw new Error(`Missing path for ${configKey || "unknown key"}`);
-		}
 		await mkdir(dirPath, { recursive: true });
 		logger.info(`ensureDirectoryExistence :: Path created at: /${dirPath}`);
 	} catch (error) {
@@ -130,8 +114,8 @@ async function clearFiles(dir: string, extension: string) {
 
 export async function setupDirectories() {
 	try {
-		await ensureDirectoryExistence(localRawClipsPath as string);
-		await ensureDirectoryExistence(localProcessedClipsPath as string);
+		await ensureDirectoryExistence(`${localRawClipsPath}`);
+		await ensureDirectoryExistence(`${localProcessedClipsPath}`);
 	} catch (error) {
 		logger.error(`setupDirectories :: ${error}`);
 	}
