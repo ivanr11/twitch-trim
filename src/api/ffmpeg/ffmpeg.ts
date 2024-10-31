@@ -1,18 +1,15 @@
-import { readdir, unlink, mkdir } from "fs/promises";
-import path from "path";
+import { readdir, mkdir } from "fs/promises";
 import { promisify } from "node:util";
 import child_process from "node:child_process";
 import { Clip } from "../../types/twitchTypes";
 import config from "../../config";
 import logger from "../../logger";
 
-export async function createVideo(clips: Clip[]) {
+export async function createVideo(clips: Clip[], date: string) {
 	try {
-		await clearFiles("./", ".txt");
-		await clearFiles("./", ".mp4");
 		await downloadClips(clips);
 		await processClips();
-		await concatenateClips();
+		await concatenateClips(date);
 
 		logger.info("createVideo :: done");
 	} catch (error) {
@@ -67,18 +64,18 @@ export async function processClips() {
 	}
 }
 
-export async function concatenateClips() {
+export async function concatenateClips(date: string) {
 	logger.info("concatenateClips :: Concatenating clips...");
-	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
-
+	const outputFileName = `${config.OUTPUT_FILE_NAME}-${date}.mp4`;
+	const concatListFileName = `concatlist-${date}.txt`;
 	try {
 		// copy files in processed clips directory into txt file for concatenation
 		await exec(
-			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > filelist.txt`,
+			`(for  %i in (${localProcessedClipsPath}/*.mp4) do @echo file '${localProcessedClipsPath}/%i') > ${concatListFileName}`,
 		);
 		// concatenate clips listed in txt file
 		await exec(
-			`ffmpeg -f concat -i filelist.txt -c copy ${outputFileName} -v error`,
+			`ffmpeg -f concat -i ${concatListFileName} -c copy ${outputFileName} -v error`,
 		);
 	} catch (error) {
 		logger.error(`concatenateClips :: ${error}`);
@@ -94,27 +91,10 @@ async function ensureDirectoryExistence(dirPath: string) {
 	}
 }
 
-async function clearFiles(dir: string, extension: string) {
+export async function setupDirectories(date: string) {
 	try {
-		const files = await readdir(dir);
-		for (const file of files) {
-			const filePath = path.join(dir, file);
-			const fileExtension = path.extname(file);
-
-			if (fileExtension === extension.toLowerCase()) {
-				await unlink(filePath);
-				logger.info(`Deleted file: ${filePath}`);
-			}
-		}
-	} catch (error) {
-		logger.error(`clearFiles :: ${error}`);
-	}
-}
-
-export async function setupDirectories(clip: Clip) {
-	try {
-		localRawClipsPath += `-${clip.game_id}-${Date.now()}`;
-		localProcessedClipsPath += `-${clip.game_id}-${Date.now()}`;
+		localRawClipsPath += `-${date}`;
+		localProcessedClipsPath += `-${date}`;
 
 		await ensureDirectoryExistence(`${localRawClipsPath}`);
 		await ensureDirectoryExistence(`${localProcessedClipsPath}`);
