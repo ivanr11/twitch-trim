@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
+import util from "dotenv";
 
-dotenv.config();
+util.config();
 
 export type Config = {
 	ACCESS_TOKEN?: string;

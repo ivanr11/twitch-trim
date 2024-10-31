@@ -1,10 +1,10 @@
-import axios from "axios";
+import util from "axios";
 import { GetClipsQueryParams, Clip } from "../../types/twitchTypes";
 import config from "../../config";
 
 export function getClient() {
 	const baseUrl = "https://api.twitch.tv/helix";
-	const client = axios.create({
+	const client = util.create({
 		baseURL: baseUrl,
 		headers: {
 			"Content-Type": "application/json",

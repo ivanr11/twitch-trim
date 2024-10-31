@@ -1,4 +1,4 @@
-import fs from "fs";
+import util from "fs";
 import { execSync } from "child_process";
 import { Clip } from "../../types/twitchTypes";
 import config from "../../config";
@@ -43,7 +43,7 @@ export function processClips() {
 	logger.info("processClips :: Processing clips...");
 
 	// process each clip
-	fs.readdirSync(localRawClipsPath as string).forEach((file) => {
+	util.readdirSync(localRawClipsPath as string).forEach((file) => {
 		try {
 			execSync(
 				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
@@ -92,31 +92,31 @@ function ensureDirectoryExistence(dirPath: string) {
 		);
 	}
 
-	fs.mkdirSync(dirPath, { recursive: true });
+	util.mkdirSync(dirPath, { recursive: true });
 	logger.info(`ensureDirectoryExistence :: Path created at: /${dirPath}`);
 }
 
 function clearFiles() {
 	const outputFileName = `${config.OUTPUT_FILE_NAME}.mp4`;
-	if (fs.existsSync(outputFileName)) {
-		fs.rmSync(`${outputFileName}`);
+	if (util.existsSync(outputFileName)) {
+		util.rmSync(`${outputFileName}`);
 		logger.info(`clearFiles :: Cleared output file "${outputFileName}"`);
 	}
 
-	if (fs.existsSync("filelist.txt")) {
-		fs.rmSync("filelist.txt");
+	if (util.existsSync("filelist.txt")) {
+		util.rmSync("filelist.txt");
 		logger.info('clearFiles :: Cleared output file "filelist.txt"');
 	}
 }
 
 export function clearDirectories() {
-	if (fs.existsSync(`./${localRawClipsPath}`)) {
-		fs.rmSync(localRawClipsPath as string, { recursive: true });
+	if (util.existsSync(`./${localRawClipsPath}`)) {
+		util.rmSync(localRawClipsPath as string, { recursive: true });
 		logger.info(`clearDirectories :: Cleared directory "${localRawClipsPath}"`);
 	}
 
-	if (fs.existsSync(`./${localProcessedClipsPath}`)) {
-		fs.rmSync(localProcessedClipsPath as string, { recursive: true });
+	if (util.existsSync(`./${localProcessedClipsPath}`)) {
+		util.rmSync(localProcessedClipsPath as string, { recursive: true });
 		logger.info(
 			`clearDirectories :: Cleared directory "${localProcessedClipsPath}"`,
 		);

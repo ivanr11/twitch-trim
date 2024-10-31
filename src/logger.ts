@@ -1,9 +1,9 @@
-import winston from "winston";
+import util from "winston";
 
-const logger = winston.createLogger({
+const logger = util.createLogger({
 	level: "info",
-	format: winston.format.simple(),
-	transports: [new winston.transports.Console()],
+	format: util.format.simple(),
+	transports: [new util.transports.Console()],
 });
 
 export default logger;
