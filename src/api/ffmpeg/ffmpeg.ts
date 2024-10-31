@@ -23,6 +23,10 @@ const localRawClipsPath = config.LOCAL_RAW_CLIPS_PATH;
 const localProcessedClipsPath = config.LOCAL_PROCESSED_CLIPS_PATH;
 
 export function downloadClips(clips: Clip[]) {
+	if (!localRawClipsPath) {
+		throw new Error("downloadClips :: Download directory path undefined");
+	}
+
 	logger.info(`downloadClips :: Downloading clips to /${localRawClipsPath}...`);
 
 	// Download each clip
@@ -39,19 +43,23 @@ export function downloadClips(clips: Clip[]) {
 }
 
 export function processClips() {
+	if (!localProcessedClipsPath) {
+		throw new Error("processClips :: Process directory path undefined");
+	}
+
 	logger.info("processClips :: Processing clips...");
 
 	// process each clip
-	util.readdirSync(localRawClipsPath as string).forEach((file) => {
-		try {
+	try {
+		util.readdirSync(localRawClipsPath as string).forEach((file) => {
 			execSync(
 				`ffmpeg -i ${localRawClipsPath}/${file} -vcodec libx264 -acodec aac -vf scale=1920x1080 -v error ${localProcessedClipsPath}/${file}`,
 			);
 			logger.info(`processClips :: Processed clip ${file}`);
-		} catch (error) {
-			logger.error(`processClips :: ${error}`);
-		}
-	});
+		});
+	} catch (error) {
+		logger.error(`processClips :: ${error}`);
+	}
 }
 
 export function concatenateClips() {
