@@ -8,6 +8,9 @@ export type Config = {
 	LOCAL_RAW_CLIPS_PATH?: string;
 	LOCAL_PROCESSED_CLIPS_PATH?: string;
 	OUTPUT_FILE_NAME?: string;
+	YOUTUBE_CLIENT_ID?: string;
+	YOUTUBE_CLIENT_SECRET?: string;
+	REDIRECT_URL?: string;
 };
 
 const config: Config = {
@@ -16,6 +19,9 @@ const config: Config = {
 	LOCAL_RAW_CLIPS_PATH: process.env.LOCAL_RAW_CLIPS_PATH,
 	LOCAL_PROCESSED_CLIPS_PATH: process.env.LOCAL_PROCESSED_CLIPS_PATH,
 	OUTPUT_FILE_NAME: process.env.OUTPUT_FILE_NAME,
+	YOUTUBE_CLIENT_ID: process.env.YOUTUBE_CLIENT_ID,
+	YOUTUBE_CLIENT_SECRET: process.env.YOUTUBE_CLIENT_SECRET,
+	REDIRECT_URL: process.env.REDIRECT_URL,
 };
 
 export default config;
