@@ -1,30 +1,31 @@
 import { google } from "googleapis";
 import config from "../../config";
-import path from "path";
-import { readFile, writeFile } from "fs/promises";
-import logger from "../../logger";
 import { OAuth2Client } from "google-auth-library";
+import logger from "../../logger";
+import fsPromises from "fs/promises";
+import path from "path";
 
 const TOKEN_PATH = path.join(process.cwd(), "token.json");
 
-export default async function getOAuth2Client(code = null) {
+export default async function getOAuth2Client(authCode = null) {
 	try {
-		const oauth2client = new google.auth.OAuth2({
+		const oauth2Client = new google.auth.OAuth2({
 			clientId: config.YOUTUBE_CLIENT_ID,
 			clientSecret: config.YOUTUBE_CLIENT_SECRET,
 			redirectUri: config.REDIRECT_URL,
 		});
 
 		try {
-			const tokenFile = (await readFile(TOKEN_PATH)).toString();
-			const token = JSON.parse(tokenFile);
-			oauth2client.setCredentials(token);
-			return oauth2client;
+			const tokenFile = await fsPromises.readFile(TOKEN_PATH);
+			const token = JSON.parse(tokenFile.toString());
+			oauth2Client.setCredentials(token);
+
+			return oauth2Client;
 		} catch {
-			if (code) {
-				return getNewToken(oauth2client, code);
+			if (authCode) {
+				return getNewToken(oauth2Client, authCode);
 			} else {
-				return oauth2client;
+				return oauth2Client;
 			}
 		}
 	} catch (error) {
@@ -32,13 +33,19 @@ export default async function getOAuth2Client(code = null) {
 	}
 }
 
-async function getNewToken(
-	oauth2client: OAuth2Client,
-	authorizationCode: string,
-) {
-	const { tokens } = await oauth2client.getToken(authorizationCode);
-	oauth2client.setCredentials(tokens);
-	await writeFile(TOKEN_PATH, JSON.stringify(tokens));
+async function getNewToken(oauth2Client: OAuth2Client, authCode: string) {
+	const { tokens } = await oauth2Client.getToken(authCode);
+	oauth2Client.setCredentials(tokens);
+	fsPromises.writeFile(TOKEN_PATH, JSON.stringify(tokens, null, 2));
 
-	return oauth2client;
+	return oauth2Client;
 }
+
+// async function getAuthUrl(oauth2Client: OAuth2Client) {
+// 	const authUrl = oauth2Client.generateAuthUrl({
+// 		access_type: "offline",
+// 		scope: "https://www.googleapis.com/auth/youtube.upload",
+// 	});
+
+// 	logger.info(`Authorization URL: ${authUrl}`);
+// }
