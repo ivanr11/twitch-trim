@@ -11,5 +11,15 @@ export default function YouTubeAuthButton() {
 		window.location.href = url;
 	}
 
-	return <button onClick={handleAuth}>Authorize YouTube</button>;
+	return (
+		<div className="flex justify-center">
+			<button
+				onClick={handleAuth}
+				className="w-60 p-3 bg-[#ff0000] text-white rounded-lg font-medium
+                     hover:bg-[#cc0000] transition duration-150 ease-in-out"
+			>
+				Sign in with YouTube
+			</button>
+		</div>
+	);
 }

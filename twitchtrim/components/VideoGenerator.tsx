@@ -52,24 +52,36 @@ export default function VideoGenerator() {
 	}
 
 	return (
-		<div className="">
-			<form onSubmit={handleGenerate} className="">
-				<div>
+		<div className="space-y-6">
+			{videoUrl && (
+				<div className="mb-8">
+					<video
+						controls
+						src={videoUrl}
+						className="w-full rounded-lg bg-[#18181b] shadow-lg"
+					/>
+					<a href={videoUrl} download className="">
+						Download Video
+					</a>
+				</div>
+			)}
+
+			<form onSubmit={handleGenerate} className="space-y-4">
+				<div className="flex gap-1 justify-center">
 					<input
 						type="text"
 						value={gameName}
 						onChange={(e) => setGameName(e.target.value)}
-						placeholder="Enter Twitch category (e.g., 'League of Legends')"
-						className=""
+						placeholder="Twitch Category"
+						className="w-max p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#9147ff] focus:border-transparent"
 						required
 					/>
-				</div>
-
-				<div>
 					<select
 						value={period}
 						onChange={(e) => setPeriod(e.target.value as TimePeriod)}
-						className=""
+						className="w-max p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
+                                 text-white focus:outline-none focus:ring-2 
+                                 focus:ring-[#9147ff] focus:border-transparent"
 					>
 						<option value="24h">Top 24H</option>
 						<option value="7d">Top 7D</option>
@@ -77,19 +89,18 @@ export default function VideoGenerator() {
 					</select>
 				</div>
 
-				<button type="submit" disabled={isProcessing || !gameName} className="">
-					{isProcessing ? "Generating..." : "Generate Video"}
-				</button>
-			</form>
-
-			{videoUrl && (
-				<div className="mt-4">
-					<video controls src={videoUrl} className="w-full rounded" />
-					<a href={videoUrl} download className="">
-						Download Video
-					</a>
+				<div></div>
+				<div className="flex justify-center">
+					<button
+						type="submit"
+						disabled={isProcessing || !gameName}
+						className="w-60 p-3 mb-2 bg-[#9147ff] text-white rounded-lg font-medium
+                             hover:bg-[#772ce8] disabled:bg-[#9147ff]/50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+					>
+						{isProcessing ? "Generating..." : "Generate Video"}
+					</button>
 				</div>
-			)}
+			</form>
 		</div>
 	);
 }
