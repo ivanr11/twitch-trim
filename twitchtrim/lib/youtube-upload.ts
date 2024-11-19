@@ -68,6 +68,26 @@ export async function uploadVideo(date: string) {
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`uploadVideo :: ${errorMessage}`);
+
+		if (errorMessage.includes("quota")) {
+			return {
+				success: false,
+				message: "YouTube API quota exceeded. Please try again later.",
+			};
+		}
+		if (errorMessage.includes("auth")) {
+			return {
+				success: false,
+				message: "YouTube authentication failed. Please try signing in again.",
+			};
+		}
+		if (errorMessage.includes("token")) {
+			return {
+				success: false,
+				message: "YouTube session expired. Please sign in again.",
+			};
+		}
+
 		return {
 			success: false,
 			message: `Failed to upload video: ${errorMessage}`,
