@@ -7,25 +7,26 @@ import { Clip } from "@/app/twitchTypes";
 import { config } from "./config";
 import logger from "@/lib/logger";
 import path from "path";
-import fs from "fs";
 
 const asyncExec = promisify(exec);
 
 export async function createVideo(clips: Clip[], date: string) {
 	try {
 		const { rawPath, processedPath } = await setupDirectories(date);
-		console.log("Directories set up, proceeding with video creation");
+		logger.info(
+			"createVideo :: Directories set up, proceeding with video creation",
+		);
 
 		await downloadClips(clips, date, rawPath);
 		await processClips(date, rawPath, processedPath);
 		await concatenateClips(date, processedPath);
 
-		logger.info("createVideo :: done");
+		logger.info("createVideo :: Video Processing Complete");
 		return { success: true, message: "Video processing complete" };
 	} catch (error) {
-		console.error("Video processing error:", error);
-		return { success: false, message: error };
-		throw new Error(`createVideo :: ${error}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`createVideo :: ${errorMessage}`);
+		return { success: false, message: errorMessage };
 	}
 }
 
@@ -39,17 +40,21 @@ export async function downloadClips(
 			throw new Error("Download directory path undefined");
 		}
 
-		logger.info(`downloadClips :: Downloading clips to /${rawPath}...`);
+		logger.info(
+			`downloadClips :: Starting download of ${clips.length} clips to ${rawPath}`,
+		);
 
 		// Download each clip
 		for (const clip of clips) {
 			await asyncExec(
 				`streamlink --output ${rawPath}/${clip.id}.mp4 ${clip.url} best`,
 			);
-			logger.info(`downloadClips :: Downloaded clip ${clip.id}`);
+			logger.info(`downloadClips :: Successfully downloaded clip ${clip.id}`);
 		}
 	} catch (error) {
-		logger.error(`downloadClips :: ${error}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`downloadClips :: ${errorMessage}`);
+		throw new Error(`Failed to download clips: ${errorMessage}`);
 	}
 }
 
@@ -74,7 +79,9 @@ export async function processClips(
 			logger.info(`processClips :: Processed clip ${file}`);
 		}
 	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`processClips :: ${error}`);
+		throw new Error(`Failed to process clips: ${errorMessage}`);
 	}
 }
 
@@ -86,61 +93,54 @@ export async function concatenateClips(date: string, processedPath: string) {
 	try {
 		// copy files in processed clips directory into txt file for concatenation
 		await asyncExec(
-			`(for  %i in (${processedPath}/*.mp4) do @echo file '${processedPath}/%i') > ${concatListFileName}`,
+			`(for  %i in (${processedPath}/*.mp4) do @echo file 'public/clips/processed/${date}/%~nxi') > ${concatListFileName}`,
 		);
 		// concatenate clips listed in txt file
 		await asyncExec(
 			`ffmpeg -f concat -i ${concatListFileName} -c copy ${outputFileName} -v error`,
 		);
+		logger.info("concatenateClips :: Successfully concatenated clips");
 	} catch (error) {
-		logger.error(`concatenateClips :: ${error}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`concatenateClips :: ${errorMessage}`);
+		throw new Error(`Failed to concatenate clips: ${errorMessage}`);
 	}
 }
 
-// async function ensureDirectoryExistence(dirPath: string) {
-// 	try {
-// 		await mkdir(dirPath, { recursive: true });
-// 		logger.info(`ensureDirectoryExistence :: Path created at: /${dirPath}`);
-// 	} catch (error) {
-// 		logger.error(`ensureDirectoryExistence :: ${error}`);
-// 	}
-// }
+async function ensureDirectoryExistence(dirPath: string) {
+	try {
+		await mkdir(dirPath, { recursive: true });
+		logger.info(`ensureDirectoryExistence :: Path created at: ${dirPath}`);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`ensureDirectoryExistence :: ${errorMessage}`);
+		throw new Error(`Failed to create directory ${dirPath}: ${errorMessage}`);
+	}
+}
 
 export async function setupDirectories(date: string) {
+	logger.info(`setupDirectories :: Setting up directories for date: ${date}`);
+
+	const baseDir = process.cwd();
+	const rawPath = path.join(baseDir, "public", "clips", "raw", date);
+	const processedPath = path.join(
+		baseDir,
+		"public",
+		"clips",
+		"processed",
+		date,
+	);
+
 	try {
-		const baseDir = process.cwd();
-		const publicDir = path.join(baseDir, "public");
-		if (!fs.existsSync(publicDir)) {
-			await mkdir(publicDir);
-		}
-
-		const clipsDir = path.join(publicDir, "clips");
-		if (!fs.existsSync(clipsDir)) {
-			await mkdir(clipsDir);
-		}
-
-		const rawDir = path.join(clipsDir, "raw");
-		const processedDir = path.join(clipsDir, "processed");
-		if (!fs.existsSync(rawDir)) {
-			await mkdir(rawDir);
-		}
-		if (!fs.existsSync(processedDir)) {
-			await mkdir(processedDir);
-		}
-
-		const rawPath = path.join(rawDir, date);
-		const processedPath = path.join(processedDir, date);
-		await mkdir(rawPath, { recursive: true });
-		await mkdir(processedPath, { recursive: true });
-
-		console.log("Directories created:", {
-			rawPath,
-			processedPath,
-		});
-
+		ensureDirectoryExistence(rawPath);
+		ensureDirectoryExistence(processedPath);
+		logger.info(
+			`setupDirectories :: Successfully created directories for date ${date}`,
+		);
 		return { rawPath, processedPath };
 	} catch (error) {
-		console.error("Directory creation error:", error);
-		throw error;
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`setupDirectories :: ${errorMessage}`);
+		throw new Error(`Failed to setup directories: ${errorMessage}`);
 	}
 }
