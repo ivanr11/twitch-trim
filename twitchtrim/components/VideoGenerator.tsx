@@ -9,6 +9,7 @@ type TimePeriod = "24h" | "7d" | "30d";
 export default function VideoGenerator() {
 	const [gameName, setGameName] = useState("");
 	const [period, setPeriod] = useState<TimePeriod>("24h");
+	const [clipCount, setClipCount] = useState(2);
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 
@@ -36,7 +37,7 @@ export default function VideoGenerator() {
 			const clips = await getClips({
 				game_name: gameName,
 				started_at: getStartDate(period),
-				first: 2,
+				first: clipCount,
 			});
 
 			const date = Date.now().toString();
@@ -87,6 +88,21 @@ export default function VideoGenerator() {
 						<option value="7d">Top 7D</option>
 						<option value="30d">Top 30D</option>
 					</select>
+					<input
+						type="number"
+						value={clipCount}
+						onChange={(e) =>
+							setClipCount(
+								Math.max(1, Math.min(20, parseInt(e.target.value) || 1)),
+							)
+						}
+						min="1"
+						max="20"
+						className="w-24 p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
+                                 text-white focus:outline-none focus:ring-2 
+                                 focus:ring-[#9147ff] focus:border-transparent"
+						title="Number of clips (1-20)"
+					/>
 				</div>
 
 				<div></div>
