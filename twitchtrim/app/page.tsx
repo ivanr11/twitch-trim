@@ -1,5 +1,4 @@
 import VideoGenerator from "@/components/VideoGenerator";
-import YouTubeAuthButton from "@/components/YouTubeAuthButton";
 
 export default function Home() {
 	return (
@@ -9,7 +8,6 @@ export default function Home() {
 					TwitchTrim
 				</h1>
 				<VideoGenerator />
-				<YouTubeAuthButton />
 			</div>
 
 			<div className="w-3/4 mb-8">
