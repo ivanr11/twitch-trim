@@ -97,7 +97,7 @@ export async function concatenateClips(date: string, processedPath: string) {
 		);
 		// concatenate clips listed in txt file
 		await asyncExec(
-			`ffmpeg -f concat -i ${concatListFileName} -c copy ${outputFileName} -v error`,
+			`ffmpeg -f concat -i ${concatListFileName} -c copy public/clips/output/${outputFileName} -v error`,
 		);
 		logger.info("concatenateClips :: Successfully concatenated clips");
 	} catch (error) {
@@ -130,10 +130,12 @@ export async function setupDirectories(date: string) {
 		"processed",
 		date,
 	);
+	const outputPath = path.join(baseDir, "public", "clips", "output");
 
 	try {
 		ensureDirectoryExistence(rawPath);
 		ensureDirectoryExistence(processedPath);
+		ensureDirectoryExistence(outputPath);
 		logger.info(
 			`setupDirectories :: Successfully created directories for date ${date}`,
 		);
