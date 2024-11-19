@@ -1,17 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getClips } from "@/lib/twitch-api";
 import { createVideo } from "@/lib/video-processing";
+import { uploadVideo } from "@/lib/youtube-upload";
+import { getYouTubeAuthUrl } from "@/lib/youtube-auth";
 
 type TimePeriod = "24h" | "7d" | "30d";
+type ProcessingState = "idle" | "generating" | "uploading";
 
 export default function VideoGenerator() {
 	const [gameName, setGameName] = useState("");
 	const [period, setPeriod] = useState<TimePeriod>("24h");
 	const [clipCount, setClipCount] = useState(2);
 	const [videoUrl, setVideoUrl] = useState("");
-	const [isProcessing, setIsProcessing] = useState(false);
+	const [processingState, setProcessingState] =
+		useState<ProcessingState>("idle");
+	const [uploadToYouTube, setUploadToYouTube] = useState(false);
+	const [isYouTubeAuthenticated, setIsYouTubeAuthenticated] = useState(false);
+
+	useEffect(() => {
+		checkYouTubeAuth();
+	}, []);
+
+	async function checkYouTubeAuth() {
+		try {
+			const response = await fetch("/api/check-youtube-auth");
+			const { isAuthenticated } = await response.json();
+			setIsYouTubeAuthenticated(isAuthenticated);
+		} catch (error) {
+			console.error("Failed to check YouTube auth status:", error);
+			setIsYouTubeAuthenticated(false);
+		}
+	}
+
+	async function handleYouTubeAuth() {
+		const authUrl = await getYouTubeAuthUrl();
+		window.location.href = authUrl;
+	}
 
 	function getStartDate(period: TimePeriod) {
 		const now = new Date();
@@ -29,9 +55,20 @@ export default function VideoGenerator() {
 		return now.toISOString();
 	}
 
+	function getProcessingMessage() {
+		switch (processingState) {
+			case "generating":
+				return "Generating video...";
+			case "uploading":
+				return "Uploading to YouTube...";
+			default:
+				return "Generate Video";
+		}
+	}
+
 	async function handleGenerate(e: React.FormEvent) {
 		e.preventDefault();
-		setIsProcessing(true);
+		setProcessingState("generating");
 
 		try {
 			const clips = await getClips({
@@ -41,15 +78,31 @@ export default function VideoGenerator() {
 			});
 
 			const date = Date.now().toString();
-			await createVideo(clips, date);
-			setVideoUrl(`/clips/output/output-${date}.mp4`);
+			const videoResult = await createVideo(clips, date);
+
+			if (videoResult.success) {
+				setVideoUrl(`/clips/output/output-${date}.mp4`);
+
+				if (uploadToYouTube) {
+					setProcessingState("uploading");
+					const uploadResult = await uploadVideo(date);
+
+					if (!uploadResult.success) {
+						throw new Error(
+							`Failed to upload to YouTube: ${uploadResult.message}`,
+						);
+					}
+				}
+			} else {
+				throw new Error("Failed to create video");
+			}
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
 			console.error(errorMessage);
+		} finally {
+			setProcessingState("idle");
 		}
-
-		setIsProcessing(false);
 	}
 
 	return (
@@ -105,15 +158,41 @@ export default function VideoGenerator() {
 					/>
 				</div>
 
-				<div></div>
+				<div className="flex justify-center items-center gap-2 text-white">
+					<input
+						type="checkbox"
+						id="youtube-upload"
+						checked={uploadToYouTube}
+						onChange={(e) => setUploadToYouTube(e.target.checked)}
+						className="w-4 h-4 rounded bg-[#18181b] border-[#2d2d2d]
+                                 focus:ring-2 focus:ring-[#9147ff] focus:border-transparent"
+						disabled={!isYouTubeAuthenticated}
+					/>
+					<label
+						htmlFor="youtube-upload"
+						className={!isYouTubeAuthenticated ? "opacity-50" : ""}
+					>
+						Upload to YouTube
+					</label>
+					{!isYouTubeAuthenticated && (
+						<button
+							type="button"
+							onClick={handleYouTubeAuth}
+							className="ml-2 text-sm text-[#ff0000] hover:text-[#cc0000]"
+						>
+							Sign in with YouTube
+						</button>
+					)}
+				</div>
+
 				<div className="flex justify-center">
 					<button
 						type="submit"
-						disabled={isProcessing || !gameName}
+						disabled={processingState !== "idle" || !gameName}
 						className="w-60 p-3 mb-2 bg-[#9147ff] text-white rounded-lg font-medium
                              hover:bg-[#772ce8] disabled:bg-[#9147ff]/50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
 					>
-						{isProcessing ? "Generating..." : "Generate Video"}
+						{getProcessingMessage()}
 					</button>
 				</div>
 			</form>

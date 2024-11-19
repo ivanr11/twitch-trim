@@ -2,17 +2,37 @@
 import { google } from "googleapis";
 import fs from "fs";
 import path from "path";
+import logger from "./logger";
+import { refreshYouTubeToken } from "./youtube-auth";
 
 export async function uploadVideo(date: string) {
 	try {
-		// const oauth2Client = await getOAuth2Client();
+		const oauth2Client = await refreshYouTubeToken();
 		const youtube = google.youtube({
 			version: "v3",
-			// auth: oauth2Client,
+			auth: oauth2Client,
 		});
 
 		const videoFileName = `output-${date}.mp4`;
-		const videoFilePath = path.resolve(videoFileName);
+		const baseDir = process.cwd();
+		const videoFilePath = path.join(
+			baseDir,
+			"public",
+			"clips",
+			"output",
+			videoFileName,
+		);
+
+		if (!fs.existsSync(videoFilePath)) {
+			const error = `Video file not found at ${videoFilePath}`;
+			logger.error(`uploadVideo :: ${error}`);
+			return {
+				success: false,
+				message: error,
+			};
+		}
+
+		logger.info(`uploadVideo :: Starting upload for video ${videoFileName}`);
 
 		const response = await youtube.videos.insert({
 			part: ["snippet", "status"],
@@ -32,15 +52,25 @@ export async function uploadVideo(date: string) {
 			},
 		});
 
+		if (!response.data.id) {
+			throw new Error("Failed to get video ID from YouTube response");
+		}
+
+		logger.info(
+			`uploadVideo :: Successfully uploaded video with ID: ${response.data.id}`,
+		);
+
 		return {
 			success: true,
 			videoId: response.data.id,
+			videoUrl: `https://youtube.com/watch?v=${response.data.id}`,
 		};
 	} catch (error) {
-		console.error("YouTube upload error:", error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`uploadVideo :: ${errorMessage}`);
 		return {
 			success: false,
-			message: error,
+			message: `Failed to upload video: ${errorMessage}`,
 		};
 	}
 }
