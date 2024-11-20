@@ -1,5 +1,6 @@
 // app/api/check-youtube-auth/route.ts
 import { cookies } from "next/headers";
+import logger from "@/lib/logger";
 
 export async function GET() {
 	try {
@@ -13,6 +14,7 @@ export async function GET() {
 			{ status: 200 },
 		);
 	} catch (error) {
+		logger.error(`GET (route.ts):: ${error}`);
 		return new Response(
 			JSON.stringify({
 				isAuthenticated: false,
