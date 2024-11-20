@@ -4,7 +4,6 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { mkdir, readdir } from "fs/promises";
 import { Clip } from "@/app/twitchTypes";
-import { config } from "./config";
 import logger from "@/lib/logger";
 import path from "path";
 
@@ -88,7 +87,7 @@ export async function processClips(
 export async function concatenateClips(date: string, processedPath: string) {
 	logger.info("concatenateClips :: Concatenating clips...");
 
-	const outputFileName = `${config.paths.output}-${date}.mp4`;
+	const outputFileName = `output-${date}.mp4`;
 	const concatListFileName = `concatlist-${date}.txt`;
 	try {
 		// copy files in processed clips directory into txt file for concatenation
