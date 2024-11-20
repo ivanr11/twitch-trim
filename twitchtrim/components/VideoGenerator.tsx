@@ -18,6 +18,7 @@ export default function VideoGenerator() {
 		useState<ProcessingState>("idle");
 	const [uploadToYouTube, setUploadToYouTube] = useState(false);
 	const [isYouTubeAuthenticated, setIsYouTubeAuthenticated] = useState(false);
+	const [error, setError] = useState("");
 
 	useEffect(() => {
 		checkYouTubeAuth();
@@ -68,6 +69,7 @@ export default function VideoGenerator() {
 
 	async function handleGenerate(e: React.FormEvent) {
 		e.preventDefault();
+		setError("");
 		setProcessingState("generating");
 
 		try {
@@ -99,6 +101,7 @@ export default function VideoGenerator() {
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
+			setError(errorMessage);
 			console.error(errorMessage);
 		} finally {
 			setProcessingState("idle");
@@ -184,6 +187,12 @@ export default function VideoGenerator() {
 						</button>
 					)}
 				</div>
+
+				{error && (
+					<div className="text-red-400 text-sm p-3 bg-red-900/20 rounded-lg">
+						{error}
+					</div>
+				)}
 
 				<div className="flex justify-center">
 					<button
