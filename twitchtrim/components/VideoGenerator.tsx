@@ -14,6 +14,7 @@ export default function VideoGenerator() {
 	const [period, setPeriod] = useState<TimePeriod>("24h");
 	const [clipCount, setClipCount] = useState(2);
 	const [videoUrl, setVideoUrl] = useState("");
+	const [youtubeVideoUrl, setYoutubeVideoUrl] = useState("");
 	const [processingState, setProcessingState] =
 		useState<ProcessingState>("idle");
 	const [uploadToYouTube, setUploadToYouTube] = useState(false);
@@ -38,6 +39,16 @@ export default function VideoGenerator() {
 	async function handleYouTubeAuth() {
 		const authUrl = await getYouTubeAuthUrl();
 		window.location.href = authUrl;
+	}
+
+	async function handleSignOut() {
+		try {
+			await fetch("/api/youtube-signout", { method: "POST" });
+			setIsYouTubeAuthenticated(false);
+			setUploadToYouTube(false);
+		} catch (error) {
+			console.error(`Failed to sign out: ${error}`);
+		}
 	}
 
 	function getStartDate(period: TimePeriod) {
@@ -70,6 +81,7 @@ export default function VideoGenerator() {
 	async function handleGenerate(e: React.FormEvent) {
 		e.preventDefault();
 		setError("");
+		setYoutubeVideoUrl("");
 		setProcessingState("generating");
 
 		try {
@@ -88,8 +100,9 @@ export default function VideoGenerator() {
 				if (uploadToYouTube) {
 					setProcessingState("uploading");
 					const uploadResult = await uploadVideo(date);
-
-					if (!uploadResult.success) {
+					if (uploadResult.success && uploadResult.videoUrl) {
+						setYoutubeVideoUrl(uploadResult.videoUrl);
+					} else {
 						throw new Error(
 							`Failed to upload to YouTube: ${uploadResult.message}`,
 						);
@@ -119,6 +132,27 @@ export default function VideoGenerator() {
 					/>
 					<a href={videoUrl} download className="">
 						Download Video
+					</a>
+				</div>
+			)}
+
+			{youtubeVideoUrl && (
+				<div className="relative text-green-400 text-center p-4 bg-green-900/20 rounded-lg mt-4">
+					<button
+						onClick={() => setYoutubeVideoUrl("")}
+						className="absolute top-2 right-2 text-gray-400 hover:text-gray-300"
+						aria-label="Close message"
+					>
+						×
+					</button>
+					Video successfully uploaded to YouTube!
+					<a
+						href={youtubeVideoUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="block mt-2 text-blue-400 hover:text-blue-300"
+					>
+						View on YouTube
 					</a>
 				</div>
 			)}
@@ -177,7 +211,7 @@ export default function VideoGenerator() {
 					>
 						Upload to YouTube
 					</label>
-					{!isYouTubeAuthenticated && (
+					{!isYouTubeAuthenticated ? (
 						<button
 							type="button"
 							onClick={handleYouTubeAuth}
@@ -185,11 +219,26 @@ export default function VideoGenerator() {
 						>
 							Sign in with YouTube
 						</button>
+					) : (
+						<button
+							type="button"
+							onClick={handleSignOut}
+							className="ml-2 text-sm text-gray-400 hover:text-gray-300"
+						>
+							Sign out
+						</button>
 					)}
 				</div>
 
 				{error && (
-					<div className="text-red-400 text-sm p-3 bg-red-900/20 rounded-lg">
+					<div className="relative text-red-400 text-sm p-4 bg-red-900/20 rounded-lg">
+						<button
+							onClick={() => setError("")}
+							className="absolute top-0 right-1 text-gray-400 hover:text-gray-300"
+							aria-label="Close error"
+						>
+							×
+						</button>
 						{error}
 					</div>
 				)}
