@@ -7,16 +7,12 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"test": "jest",
-		"test:w": "jest --watch",
-		"format": "prettier --write .",
-		"sandbox": "ts-node src/scripts/sandbox.ts"
+		"format": "prettier --write ."
 	},
 	"dependencies": {
 		"axios": "^1.7.7",
 		"dotenv": "^16.4.5",
 		"express": "^4.21.1",
-		"google-auth-library": "^9.14.2",
 		"googleapis": "^144.0.0",
 		"next": "15.0.3",
 		"react": "19.0.0-rc-66855b96-20241106",
@@ -26,8 +22,6 @@
 	"devDependencies": {
 		"@eslint/js": "^9.15.0",
 		"@types/eslint__js": "^8.42.3",
-		"@types/express": "^5.0.0",
-		"@types/jest": "^29.5.14",
 		"@types/node": "^20.17.6",
 		"@types/react": "^18",
 		"@types/react-dom": "^18",
@@ -37,8 +31,6 @@
 		"postcss": "^8",
 		"prettier": "^3.3.3",
 		"tailwindcss": "^3.4.1",
-		"ts-jest": "^29.2.5",
-		"ts-node": "^10.9.2",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.15.0"
 	}
