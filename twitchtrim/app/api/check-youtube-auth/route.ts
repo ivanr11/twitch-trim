@@ -14,7 +14,7 @@ export async function GET() {
 			{ status: 200 },
 		);
 	} catch (error) {
-		logger.error(`GET (route.ts):: ${error}`);
+		logger.error(`check-youtube-auth :: ${error}`);
 		return new Response(
 			JSON.stringify({
 				isAuthenticated: false,
