@@ -1,7 +1,7 @@
 "use server";
 
 import util from "axios";
-import { GetClipsQueryParams, Clip } from "@/app/twitchTypes";
+import { GetClipsQueryParams, Clip } from "@/app/types/twitchTypes";
 import { config } from "./config";
 import logger from "./logger";
 

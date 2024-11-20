@@ -3,7 +3,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { mkdir, readdir } from "fs/promises";
-import { Clip } from "@/app/twitchTypes";
+import { Clip } from "@/app/types/twitchTypes";
 import logger from "@/lib/logger";
 import path from "path";
 
