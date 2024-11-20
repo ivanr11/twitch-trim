@@ -1,27 +1,45 @@
 {
-  "name": "twitchtrim",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "next": "15.0.3",
-    "next-auth": "^5.0.0-beta.25",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.3",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
-  }
+	"name": "twitchtrim",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint",
+		"test": "jest",
+		"test:w": "jest --watch",
+		"format": "prettier --write .",
+		"sandbox": "ts-node src/scripts/sandbox.ts"
+	},
+	"dependencies": {
+		"axios": "^1.7.7",
+		"dotenv": "^16.4.5",
+		"express": "^4.21.1",
+		"google-auth-library": "^9.14.2",
+		"googleapis": "^144.0.0",
+		"next": "15.0.3",
+		"react": "19.0.0-rc-66855b96-20241106",
+		"react-dom": "19.0.0-rc-66855b96-20241106",
+		"winston": "^3.17.0"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.15.0",
+		"@types/eslint__js": "^8.42.3",
+		"@types/express": "^5.0.0",
+		"@types/jest": "^29.5.14",
+		"@types/node": "^20.17.6",
+		"@types/react": "^18",
+		"@types/react-dom": "^18",
+		"eslint": "^8.57.1",
+		"eslint-config-next": "15.0.3",
+		"jest": "^29.7.0",
+		"postcss": "^8",
+		"prettier": "^3.3.3",
+		"tailwindcss": "^3.4.1",
+		"ts-jest": "^29.2.5",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.3",
+		"typescript-eslint": "^8.15.0"
+	}
 }
