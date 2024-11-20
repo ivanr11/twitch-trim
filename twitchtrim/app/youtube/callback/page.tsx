@@ -2,9 +2,9 @@
 
 import { handleYouTubeCallback } from "@/lib/youtube-auth";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function YouTubeCallback() {
+function CallbackHandler() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 
@@ -16,4 +16,12 @@ export default function YouTubeCallback() {
 	}, [searchParams]);
 
 	return <div>Processing YouTube Authorization...</div>;
+}
+
+export default function YouTubeCallback() {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<CallbackHandler />
+		</Suspense>
+	);
 }
