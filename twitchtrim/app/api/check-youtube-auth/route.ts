@@ -1,4 +1,3 @@
-// app/api/check-youtube-auth/route.ts
 import { cookies } from "next/headers";
 import logger from "@/lib/logger";
 
