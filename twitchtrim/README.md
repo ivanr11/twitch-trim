@@ -1,6 +1,6 @@
 # TwitchTrim
 
-A web application that gathers the most popular Twitch clips based on category or broadcaster and merges them into a single video with the option of uploading the compiled video to YouTube.
+A web application that gathers the most popular Twitch clips based on category and merges them into a single video with the option of uploading the compiled video to YouTube.
 
 ## Getting Started
 
@@ -9,15 +9,15 @@ A web application that gathers the most popular Twitch clips based on category o
 - [Node.js](https://nodejs.org) and npm installed
 - [FFmpeg](https://ffmpeg.org/) installed (for video processing)
 - [Streamlink](https://streamlink.github.io/) installed (for clip downloading)
-- Twitch API credentials
+- Twitch and YouTube API credentials
 
 ### Setup
 
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/yourusername/twitch-trim.git
-cd twitch-trim
+git clone https://github.com/ivanr11/twitch-trim.git
+cd twitch-trim/twitchtrim
 ```
 
 2. **Install dependencies:**
@@ -29,11 +29,12 @@ npm install
 3. **Configure environment variables in a** `.env` **file:**
 
 ```
-ACCESS_TOKEN=
-CLIENT_ID=
-LOCAL_RAW_CLIPS_PATH=
-LOCAL_PROCESSED_CLIPS_PATH=
-OUTPUT_FILE_NAME=
+TWITCH_ACCESS_TOKEN=
+TWITCH_CLIENT_ID=
+
+YOUTUBE_CLIENT_ID=
+YOUTUBE_CLIENT_SECRET=
+YOUTUBE_REDIRECT_URL=
 ```
 
 4. **Build the project**
@@ -45,5 +46,5 @@ npm run build
 5. **Run the application**
 
 ```bash
-npm run serve
+npm run start
 ```
