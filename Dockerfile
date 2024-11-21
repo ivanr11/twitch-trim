@@ -10,10 +10,9 @@ RUN pip3 install streamlink
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
-
 COPY twitchtrim/ ./
+
+RUN npm install
 
 RUN npm run build
 
