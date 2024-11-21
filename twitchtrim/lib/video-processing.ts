@@ -2,7 +2,7 @@
 
 import { exec } from "child_process";
 import { promisify } from "util";
-import { mkdir, readdir } from "fs/promises";
+import { mkdir, readdir, writeFile, unlink, rm } from "fs/promises";
 import { Clip } from "@/app/types/twitchTypes";
 import logger from "@/lib/logger";
 import path from "path";
@@ -19,6 +19,7 @@ export async function createVideo(clips: Clip[], date: string) {
 		await downloadClips(clips, date, rawPath);
 		await processClips(date, rawPath, processedPath);
 		await concatenateClips(date, processedPath);
+		await cleanupTempDirectories(rawPath, processedPath);
 
 		logger.info("createVideo :: Video Processing Complete");
 		return { success: true, message: "Video processing complete" };
@@ -91,13 +92,25 @@ export async function concatenateClips(date: string, processedPath: string) {
 	const concatListFileName = `concatlist-${date}.txt`;
 	try {
 		// copy files in processed clips directory into txt file for concatenation
-		await asyncExec(
-			`(for  %i in (${processedPath}/*.mp4) do @echo file 'public/clips/processed/${date}/%~nxi') > ${concatListFileName}`,
-		);
+		const files = await readdir(processedPath);
+		const mp4Files = files.filter((file) => file.endsWith(".mp4"));
+
+		const fileList = mp4Files
+			.map(
+				(file) =>
+					`file '${path.posix.join("public", "clips", "processed", date, file)}'`,
+			)
+			.join("\n");
+
+		await writeFile(concatListFileName, fileList);
+
 		// concatenate clips listed in txt file
 		await asyncExec(
 			`ffmpeg -f concat -i ${concatListFileName} -c copy public/clips/output/${outputFileName} -v error`,
 		);
+
+		await unlink(concatListFileName);
+
 		logger.info("concatenateClips :: Successfully concatenated clips");
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -143,5 +156,20 @@ export async function setupDirectories(date: string) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`setupDirectories :: ${errorMessage}`);
 		throw new Error(`Failed to setup directories: ${errorMessage}`);
+	}
+}
+
+async function cleanupTempDirectories(rawPath: string, processedPath: string) {
+	try {
+		await Promise.all([
+			rm(rawPath, { recursive: true, force: true }),
+			rm(processedPath, { recursive: true, force: true }),
+		]);
+		logger.info(`cleanupTempDirectories :: Successfully removed temporary directories: 
+            Raw: ${rawPath}
+            Processed: ${processedPath}`);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`cleanupTempDirectories :: ${errorMessage}`);
 	}
 }
