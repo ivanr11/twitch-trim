@@ -13,6 +13,10 @@ interface CategorySearchProps {
 	required?: boolean;
 }
 
+const ERROR_MESSAGES = {
+	SEARCH_FAILED: "Unable to search categories. Please try again.",
+};
+
 export default function CategorySearch({
 	value,
 	onChange,
@@ -22,6 +26,7 @@ export default function CategorySearch({
 	const [suggestions, setSuggestions] = useState<CategorySearchResult[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [error, setError] = useState("");
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const componentRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,15 +55,20 @@ export default function CategorySearch({
 		}
 
 		setIsLoading(true);
+		setError("");
 		try {
 			const response = await fetch(
 				`/api/search-categories?query=${encodeURIComponent(searchQuery)}`,
 			);
+			if (!response.ok) {
+				throw new Error(ERROR_MESSAGES.SEARCH_FAILED);
+			}
 			const data = (await response.json()) as CategorySearchResult[];
 			setSuggestions(data);
 		} catch (error) {
 			console.error("Failed to fetch categories:", error);
 			setSuggestions([]);
+			setError(ERROR_MESSAGES.SEARCH_FAILED);
 		} finally {
 			setIsLoading(false);
 		}
@@ -90,6 +100,7 @@ export default function CategorySearch({
 		onChange("");
 		setSuggestions([]);
 		setShowSuggestions(false);
+		setError("");
 	};
 
 	return (
@@ -118,7 +129,13 @@ export default function CategorySearch({
 				)}
 			</div>
 
-			{showSuggestions && (suggestions.length > 0 || isLoading) && (
+			{error && (
+				<div className="absolute z-10 w-full mt-1 p-2 text-red-400 text-sm bg-red-900/20 rounded-lg">
+					{error}
+				</div>
+			)}
+
+			{showSuggestions && !error && (suggestions.length > 0 || isLoading) && (
 				<div
 					className="absolute z-10 w-full mt-1 bg-[#18181b] border border-[#2d2d2d] 
                             rounded-lg shadow-lg max-h-60 overflow-y-auto"

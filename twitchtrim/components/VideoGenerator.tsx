@@ -10,6 +10,16 @@ import CategorySearch from "./CategorySearch";
 type TimePeriod = "24h" | "7d" | "30d" | "6m" | "1y";
 type ProcessingState = "idle" | "generating" | "uploading" | "loading-video";
 
+const ERROR_MESSAGES = {
+	VIDEO_NOT_FOUND: "Unable to load the video. Please try again.",
+	VIDEO_GENERATION: "Unable to generate the video. Please try again later.",
+	YOUTUBE_UPLOAD: "Failed to upload to YouTube. Please try again.",
+	YOUTUBE_AUTH:
+		"Unable to verify YouTube authentication. Please try signing in again.",
+	YOUTUBE_SIGNOUT: "Unable to sign out. Please try again.",
+	DEFAULT: "Something went wrong. Please try again later.",
+};
+
 export default function VideoGenerator() {
 	const [gameName, setGameName] = useState("");
 	const [period, setPeriod] = useState<TimePeriod>("24h");
@@ -37,10 +47,10 @@ export default function VideoGenerator() {
 				if (response.ok) {
 					setVideoUrl(`/api/video/${videoId}`);
 				} else {
-					throw new Error("Video not found");
+					throw new Error("VIDEO_NOT_FOUND");
 				}
 			} catch (error) {
-				setError("Failed to load video");
+				setError(ERROR_MESSAGES.VIDEO_NOT_FOUND);
 				console.error("Failed to load video:", error);
 			} finally {
 				setProcessingState((prev) => (prev === "uploading" ? prev : "idle"));
@@ -66,8 +76,13 @@ export default function VideoGenerator() {
 	}
 
 	async function handleYouTubeAuth() {
-		const authUrl = await getYouTubeAuthUrl();
-		window.location.href = authUrl;
+		try {
+			const authUrl = await getYouTubeAuthUrl();
+			window.location.href = authUrl;
+		} catch (error) {
+			console.error("YouTube auth error:", error);
+			setError(ERROR_MESSAGES.YOUTUBE_AUTH);
+		}
 	}
 
 	async function handleSignOut() {
@@ -76,7 +91,8 @@ export default function VideoGenerator() {
 			setIsYouTubeAuthenticated(false);
 			setUploadToYouTube(false);
 		} catch (error) {
-			console.error(`Failed to sign out: ${error}`);
+			console.error("Sign out error:", error);
+			setError(ERROR_MESSAGES.YOUTUBE_SIGNOUT);
 		}
 	}
 
@@ -143,21 +159,21 @@ export default function VideoGenerator() {
 						setYoutubeVideoUrl(uploadResult.videoUrl);
 						setProcessingState("idle");
 					} else {
-						throw new Error(
-							`Failed to upload to YouTube: ${uploadResult.message}`,
-						);
+						throw new Error("YOUTUBE_UPLOAD");
 					}
 				} else {
 					setProcessingState("idle");
 				}
 			} else {
-				throw new Error("Failed to create video");
+				throw new Error("VIDEO_GENERATION");
 			}
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
-			setError(errorMessage);
-			console.error(errorMessage);
+			console.error("Generation error:", error);
+			const errorType = error instanceof Error ? error.message : "DEFAULT";
+			setError(
+				ERROR_MESSAGES[errorType as keyof typeof ERROR_MESSAGES] ||
+					ERROR_MESSAGES.DEFAULT,
+			);
 			setProcessingState("idle");
 		}
 	}
