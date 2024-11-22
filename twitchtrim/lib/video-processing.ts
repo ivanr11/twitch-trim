@@ -75,7 +75,7 @@ export async function processClips(
 		const files = await readdir(rawPath);
 		for (const file of files) {
 			await asyncExec(
-				`ffmpeg -i ${rawPath}/${file} -vcodec libx264 -acodec aac -ar 48000 -vf "scale=1920x1080,fps=60" -v error "${processedPath}/${file}"`,
+				`ffmpeg -i ${rawPath}/${file} -vcodec libx264 -acodec aac -ar 48000 -vf "scale=1920x1080,fps=60" -preset ultrafast -threads 0 -v error "${processedPath}/${file}"`,
 			);
 			logger.info(`processClips :: Processed clip ${file}`);
 		}
