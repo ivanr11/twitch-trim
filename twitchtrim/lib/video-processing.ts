@@ -11,10 +11,12 @@ const asyncExec = promisify(exec);
 
 export async function createVideo(clips: Clip[], date: string) {
 	try {
-		const { rawPath, processedPath } = await setupDirectories(date);
+		const { rawPath, processedPath, outputPath } = await setupDirectories(date);
 		logger.info(
 			"createVideo :: Directories set up, proceeding with video creation",
 		);
+
+		await clearOutputDirectory(outputPath);
 
 		await downloadClips(clips, date, rawPath);
 		await processClips(date, rawPath, processedPath);
@@ -131,23 +133,6 @@ async function ensureDirectoryExistence(dirPath: string) {
 	}
 }
 
-async function cleanupTempDirectories(rawPath: string, processedPath: string) {
-	try {
-		await Promise.all([
-			rm(rawPath, { recursive: true, force: true }),
-			rm(processedPath, { recursive: true, force: true }),
-		]);
-		logger.info(`cleanupTempDirectories :: Successfully removed temporary directories: 
-			Raw: ${rawPath}
-			Processed: ${processedPath}`);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		logger.error(
-			`cleanupTempDirectories :: Failed to remove directories: ${errorMessage}`,
-		);
-	}
-}
-
 export async function setupDirectories(date: string) {
 	logger.info(`setupDirectories :: Setting up directories for date: ${date}`);
 
@@ -169,10 +154,41 @@ export async function setupDirectories(date: string) {
 		logger.info(
 			`setupDirectories :: Successfully created directories for date ${date}`,
 		);
-		return { rawPath, processedPath };
+		return { rawPath, processedPath, outputPath };
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`setupDirectories :: ${errorMessage}`);
 		throw error;
+	}
+}
+
+async function clearOutputDirectory(outputPath: string) {
+	try {
+		const files = await readdir(outputPath);
+		await Promise.all(files.map((file) => unlink(path.join(outputPath, file))));
+		logger.info(
+			"clearOutputDirectory :: Successfully cleared output directory",
+		);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`clearOutputDirectory :: ${errorMessage}`);
+		throw error;
+	}
+}
+
+async function cleanupTempDirectories(rawPath: string, processedPath: string) {
+	try {
+		await Promise.all([
+			rm(rawPath, { recursive: true, force: true }),
+			rm(processedPath, { recursive: true, force: true }),
+		]);
+		logger.info(`cleanupTempDirectories :: Successfully removed temporary directories: 
+			Raw: ${rawPath}
+			Processed: ${processedPath}`);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(
+			`cleanupTempDirectories :: Failed to remove directories: ${errorMessage}`,
+		);
 	}
 }
