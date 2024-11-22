@@ -44,25 +44,25 @@ export default function Home() {
 						Experience the future of Twitch highlight videos with TwitchTrim.
 					</p>
 				</div>
-			</div>
 
-			{showWarning && (
-				<div className="bg-yellow-100 border-l-4 border-yellow-500 p-2 mb-4 text-sm text-yellow-700 flex justify-between items-center relative">
-					<p className="pr-4">
-						<span className="font-bold">Note:</span> During the sign-in process,
-						you may see a Google security warning as this app is currently
-						pending verification. You can safely proceed by clicking
-						&quot;Advanced&quot; and then &quot;Go to railway.app
-						(unsafe)&quot;.
-					</p>
-					<button
-						onClick={() => setShowWarning(false)}
-						className="absolute top-1 right-1 hover:text-yellow-900 w-4 h-4 flex items-center justify-center"
-					>
-						×
-					</button>
-				</div>
-			)}
+				{showWarning && (
+					<div className="w-3/4 bg-yellow-100 border-l-4 border-yellow-500 p-2 mt-4 text-sm text-yellow-700  relative">
+						<p className="pr-4">
+							<span className="font-bold">Note:</span> During the sign-in
+							process, you may see a Google security warning as this app is
+							currently pending verification. You can safely proceed by clicking
+							&quot;Advanced&quot; and then &quot;Go to railway.app
+							(unsafe)&quot;.
+						</p>
+						<button
+							onClick={() => setShowWarning(false)}
+							className="absolute top-1 right-1 hover:text-yellow-900 w-4 h-4"
+						>
+							×
+						</button>
+					</div>
+				)}
+			</div>
 		</main>
 	);
 }

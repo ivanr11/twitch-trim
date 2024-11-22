@@ -35,3 +35,15 @@ export type Clip = {
 	vod_offset: number;
 	is_featured: boolean;
 };
+
+export type TwitchCategory = {
+	id: string;
+	name: string;
+	box_art_url: string;
+};
+
+export type CategorySearchResult = {
+	id: string;
+	name: string;
+	boxArtUrl: string;
+};

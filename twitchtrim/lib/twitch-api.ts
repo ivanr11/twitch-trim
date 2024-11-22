@@ -1,7 +1,12 @@
 "use server";
 
 import util from "axios";
-import { GetClipsQueryParams, Clip } from "@/app/types/twitchTypes";
+import {
+	GetClipsQueryParams,
+	Clip,
+	TwitchCategory,
+	CategorySearchResult,
+} from "@/app/types/twitchTypes";
 import { config } from "./config";
 import logger from "./logger";
 
@@ -27,6 +32,33 @@ export async function getClient() {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`getClient :: ${errorMessage}`);
 		throw new Error(`Failed to create Twitch API client: ${errorMessage}`);
+	}
+}
+
+export async function searchCategories(
+	query: string,
+): Promise<CategorySearchResult[]> {
+	try {
+		if (!query) return [];
+
+		const client = await getClient();
+		const response = await client.get("/search/categories", {
+			params: { query, first: 10 },
+		});
+
+		if (!response.data?.data) {
+			throw new Error("Invalid response format from Twitch API");
+		}
+
+		return response.data.data.map((category: TwitchCategory) => ({
+			id: category.id,
+			name: category.name,
+			boxArtUrl: category.box_art_url,
+		}));
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`searchCategories :: ${errorMessage}`);
+		throw new Error(`Error searching categories: ${errorMessage}`);
 	}
 }
 

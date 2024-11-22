@@ -5,6 +5,7 @@ import { getClips } from "@/lib/twitch-api";
 import { createVideo } from "@/lib/video-processing";
 import { uploadVideo } from "@/lib/youtube-upload";
 import { getYouTubeAuthUrl } from "@/lib/youtube-auth";
+import CategorySearch from "./CategorySearch";
 
 type TimePeriod = "24h" | "7d" | "30d" | "6m" | "1y";
 type ProcessingState = "idle" | "generating" | "uploading" | "loading-video";
@@ -206,43 +207,55 @@ export default function VideoGenerator() {
 			)}
 
 			<form onSubmit={handleGenerate} className="space-y-4">
-				<div className="flex gap-1 justify-center">
-					<input
-						type="text"
-						value={gameName}
-						onChange={(e) => setGameName(e.target.value)}
-						placeholder="Twitch Category"
-						className="w-max p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#9147ff] focus:border-transparent"
-						required
-					/>
-					<select
-						value={period}
-						onChange={(e) => setPeriod(e.target.value as TimePeriod)}
-						className="w-max p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
+				<div className="flex gap-2 justify-center items-end">
+					<div className="flex flex-col gap-2">
+						<label htmlFor="game-name" className="text-white text-sm">
+							Category
+						</label>
+						<CategorySearch value={gameName} onChange={setGameName} required />
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<label htmlFor="time-period" className="text-white text-sm">
+							Time Period
+						</label>
+						<select
+							id="time-period"
+							value={period}
+							onChange={(e) => setPeriod(e.target.value as TimePeriod)}
+							className="w-max p-3 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
                                  text-white focus:outline-none focus:ring-2 
                                  focus:ring-[#9147ff] focus:border-transparent"
-					>
-						<option value="24h">Top 24H</option>
-						<option value="7d">Top 7D</option>
-						<option value="30d">Top 30D</option>
-						<option value="6m">Top 6M</option>
-						<option value="1y">Top 1Y</option>
-					</select>
-					<input
-						type="number"
-						value={clipCount}
-						onChange={(e) =>
-							setClipCount(
-								Math.max(1, Math.min(5, parseInt(e.target.value) || 1)),
-							)
-						}
-						min="1"
-						max="5"
-						className="w-24 p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
+						>
+							<option value="24h">Top 24H</option>
+							<option value="7d">Top 7D</option>
+							<option value="30d">Top 30D</option>
+							<option value="6m">Top 6M</option>
+							<option value="1y">Top 1Y</option>
+						</select>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<label htmlFor="clip-count" className="text-white text-sm">
+							Number of Clips
+						</label>
+						<input
+							id="clip-count"
+							type="number"
+							value={clipCount}
+							onChange={(e) =>
+								setClipCount(
+									Math.max(1, Math.min(5, parseInt(e.target.value) || 1)),
+								)
+							}
+							min="1"
+							max="5"
+							className="w-24 p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
                                  text-white focus:outline-none focus:ring-2 
                                  focus:ring-[#9147ff] focus:border-transparent"
-						title="Number of clips (1-20)"
-					/>
+							title="Number of clips (1-5)"
+						/>
+					</div>
 				</div>
 
 				<div className="flex justify-center items-center gap-2 text-white">
