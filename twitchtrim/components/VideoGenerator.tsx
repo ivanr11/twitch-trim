@@ -233,11 +233,11 @@ export default function VideoGenerator() {
 						value={clipCount}
 						onChange={(e) =>
 							setClipCount(
-								Math.max(1, Math.min(20, parseInt(e.target.value) || 1)),
+								Math.max(1, Math.min(5, parseInt(e.target.value) || 1)),
 							)
 						}
 						min="1"
-						max="20"
+						max="5"
 						className="w-24 p-2.5 rounded-lg bg-[#18181b] border border-[#2d2d2d] 
                                  text-white focus:outline-none focus:ring-2 
                                  focus:ring-[#9147ff] focus:border-transparent"
