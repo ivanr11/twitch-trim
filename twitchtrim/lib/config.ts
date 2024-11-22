@@ -9,21 +9,3 @@ export const config = {
 		redirectUrl: process.env.YOUTUBE_REDIRECT_URL,
 	},
 };
-
-const validateConfig = () => {
-	const required = [
-		"TWITCH_ACCESS_TOKEN",
-		"TWITCH_CLIENT_ID",
-		"YOUTUBE_CLIENT_ID",
-		"YOUTUBE_CLIENT_SECRET",
-		"YOUTUBE_REDIRECT_URL",
-	];
-
-	for (const key of required) {
-		if (!process.env[key]) {
-			throw new Error(`Missing required environment variable: ${key}`);
-		}
-	}
-};
-
-validateConfig();
