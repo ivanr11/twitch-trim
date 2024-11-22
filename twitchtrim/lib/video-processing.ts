@@ -19,6 +19,7 @@ export async function createVideo(clips: Clip[], date: string) {
 		await downloadClips(clips, date, rawPath);
 		await processClips(date, rawPath, processedPath);
 		await concatenateClips(date, processedPath);
+
 		await cleanupTempDirectories(rawPath, processedPath);
 
 		logger.info("createVideo :: Video Processing Complete");
@@ -54,7 +55,7 @@ export async function downloadClips(
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`downloadClips :: ${errorMessage}`);
-		throw new Error(`Failed to download clips: ${errorMessage}`);
+		throw error;
 	}
 }
 
@@ -71,7 +72,7 @@ export async function processClips(
 		logger.info("processClips :: Processing clips...");
 
 		// process each clip
-		const files = await readdir(rawPath as string);
+		const files = await readdir(rawPath);
 		for (const file of files) {
 			await asyncExec(
 				`ffmpeg -i ${rawPath}/${file} -vcodec libx264 -acodec aac -ar 48000 -vf "scale=1920x1080,fps=60" -v error "${processedPath}/${file}"`,
@@ -80,8 +81,8 @@ export async function processClips(
 		}
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		logger.error(`processClips :: ${error}`);
-		throw new Error(`Failed to process clips: ${errorMessage}`);
+		logger.error(`processClips :: ${errorMessage}`);
+		throw error;
 	}
 }
 
@@ -115,7 +116,7 @@ export async function concatenateClips(date: string, processedPath: string) {
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`concatenateClips :: ${errorMessage}`);
-		throw new Error(`Failed to concatenate clips: ${errorMessage}`);
+		throw error;
 	}
 }
 
@@ -126,7 +127,24 @@ async function ensureDirectoryExistence(dirPath: string) {
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`ensureDirectoryExistence :: ${errorMessage}`);
-		throw new Error(`Failed to create directory ${dirPath}: ${errorMessage}`);
+		throw error;
+	}
+}
+
+async function cleanupTempDirectories(rawPath: string, processedPath: string) {
+	try {
+		await Promise.all([
+			rm(rawPath, { recursive: true, force: true }),
+			rm(processedPath, { recursive: true, force: true }),
+		]);
+		logger.info(`cleanupTempDirectories :: Successfully removed temporary directories: 
+			Raw: ${rawPath}
+			Processed: ${processedPath}`);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(
+			`cleanupTempDirectories :: Failed to remove directories: ${errorMessage}`,
+		);
 	}
 }
 
@@ -145,9 +163,9 @@ export async function setupDirectories(date: string) {
 	const outputPath = path.join(baseDir, "public", "clips", "output");
 
 	try {
-		ensureDirectoryExistence(rawPath);
-		ensureDirectoryExistence(processedPath);
-		ensureDirectoryExistence(outputPath);
+		await ensureDirectoryExistence(rawPath);
+		await ensureDirectoryExistence(processedPath);
+		await ensureDirectoryExistence(outputPath);
 		logger.info(
 			`setupDirectories :: Successfully created directories for date ${date}`,
 		);
@@ -155,21 +173,6 @@ export async function setupDirectories(date: string) {
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`setupDirectories :: ${errorMessage}`);
-		throw new Error(`Failed to setup directories: ${errorMessage}`);
-	}
-}
-
-async function cleanupTempDirectories(rawPath: string, processedPath: string) {
-	try {
-		await Promise.all([
-			rm(rawPath, { recursive: true, force: true }),
-			rm(processedPath, { recursive: true, force: true }),
-		]);
-		logger.info(`cleanupTempDirectories :: Successfully removed temporary directories: 
-            Raw: ${rawPath}
-            Processed: ${processedPath}`);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		logger.error(`cleanupTempDirectories :: ${errorMessage}`);
+		throw error;
 	}
 }

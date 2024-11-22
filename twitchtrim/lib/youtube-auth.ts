@@ -2,14 +2,15 @@
 
 import { google } from "googleapis";
 import { cookies } from "next/headers";
+import { config } from "./config";
+
+const oauth2Client = new google.auth.OAuth2(
+	config.youtube.clientId,
+	config.youtube.clientSecret,
+	config.youtube.redirectUrl,
+);
 
 export async function getYouTubeAuthUrl() {
-	const oauth2Client = new google.auth.OAuth2(
-		process.env.YOUTUBE_CLIENT_ID,
-		process.env.YOUTUBE_CLIENT_SECRET,
-		process.env.YOUTUBE_REDIRECT_URL,
-	);
-
 	const scopes = ["https://www.googleapis.com/auth/youtube.upload"];
 
 	const authUrl = oauth2Client.generateAuthUrl({
@@ -22,12 +23,6 @@ export async function getYouTubeAuthUrl() {
 }
 
 export async function handleYouTubeCallback(code: string) {
-	const oauth2Client = new google.auth.OAuth2(
-		process.env.YOUTUBE_CLIENT_ID,
-		process.env.YOUTUBE_CLIENT_SECRET,
-		process.env.YOUTUBE_REDIRECT_URL,
-	);
-
 	const { tokens } = await oauth2Client.getToken(code);
 
 	(await cookies()).set("youtube_tokens", JSON.stringify(tokens), {
@@ -44,12 +39,6 @@ export async function refreshYouTubeToken() {
 	if (!tokenCookie) throw new Error("No stored tokens");
 
 	const tokens = JSON.parse(tokenCookie.value);
-
-	const oauth2Client = new google.auth.OAuth2(
-		process.env.YOUTUBE_CLIENT_ID,
-		process.env.YOUTUBE_CLIENT_SECRET,
-		process.env.YOUTUBE_REDIRECT_URL,
-	);
 
 	oauth2Client.setCredentials(tokens);
 	const { credentials } = await oauth2Client.refreshAccessToken();

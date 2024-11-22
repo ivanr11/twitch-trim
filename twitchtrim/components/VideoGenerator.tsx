@@ -6,13 +6,14 @@ import { createVideo } from "@/lib/video-processing";
 import { uploadVideo } from "@/lib/youtube-upload";
 import { getYouTubeAuthUrl } from "@/lib/youtube-auth";
 
-type TimePeriod = "24h" | "7d" | "30d";
-type ProcessingState = "idle" | "generating" | "uploading";
+type TimePeriod = "24h" | "7d" | "30d" | "6m" | "1y";
+type ProcessingState = "idle" | "generating" | "uploading" | "loading-video";
 
 export default function VideoGenerator() {
 	const [gameName, setGameName] = useState("");
 	const [period, setPeriod] = useState<TimePeriod>("24h");
 	const [clipCount, setClipCount] = useState(2);
+	const [videoId, setVideoId] = useState("");
 	const [videoUrl, setVideoUrl] = useState("");
 	const [youtubeVideoUrl, setYoutubeVideoUrl] = useState("");
 	const [processingState, setProcessingState] =
@@ -20,6 +21,33 @@ export default function VideoGenerator() {
 	const [uploadToYouTube, setUploadToYouTube] = useState(false);
 	const [isYouTubeAuthenticated, setIsYouTubeAuthenticated] = useState(false);
 	const [error, setError] = useState("");
+
+	useEffect(() => {
+		async function checkVideo() {
+			if (!videoId) return;
+
+			setProcessingState((prev) =>
+				prev === "uploading" ? prev : "loading-video",
+			);
+			try {
+				const response = await fetch(`/api/video/${videoId}`, {
+					method: "GET",
+				});
+				if (response.ok) {
+					setVideoUrl(`/api/video/${videoId}`);
+				} else {
+					throw new Error("Video not found");
+				}
+			} catch (error) {
+				setError("Failed to load video");
+				console.error("Failed to load video:", error);
+			} finally {
+				setProcessingState((prev) => (prev === "uploading" ? prev : "idle"));
+			}
+		}
+
+		checkVideo();
+	}, [videoId]);
 
 	useEffect(() => {
 		checkYouTubeAuth();
@@ -63,6 +91,12 @@ export default function VideoGenerator() {
 			case "30d":
 				now.setDate(now.getDate() - 30);
 				break;
+			case "6m":
+				now.setMonth(now.getMonth() - 6);
+				break;
+			case "1y":
+				now.setFullYear(now.getFullYear() - 1);
+				break;
 		}
 		return now.toISOString();
 	}
@@ -73,6 +107,8 @@ export default function VideoGenerator() {
 				return "Generating video...";
 			case "uploading":
 				return "Uploading to YouTube...";
+			case "loading-video":
+				return "Loading video...";
 			default:
 				return "Generate Video";
 		}
@@ -81,6 +117,8 @@ export default function VideoGenerator() {
 	async function handleGenerate(e: React.FormEvent) {
 		e.preventDefault();
 		setError("");
+		setVideoUrl("");
+		setVideoId("");
 		setYoutubeVideoUrl("");
 		setProcessingState("generating");
 
@@ -95,18 +133,21 @@ export default function VideoGenerator() {
 			const videoResult = await createVideo(clips, date);
 
 			if (videoResult.success) {
-				setVideoUrl(`/clips/output/output-${date}.mp4`);
+				setVideoId(`output-${date}.mp4`);
 
 				if (uploadToYouTube) {
 					setProcessingState("uploading");
 					const uploadResult = await uploadVideo(date);
 					if (uploadResult.success && uploadResult.videoUrl) {
 						setYoutubeVideoUrl(uploadResult.videoUrl);
+						setProcessingState("idle");
 					} else {
 						throw new Error(
 							`Failed to upload to YouTube: ${uploadResult.message}`,
 						);
 					}
+				} else {
+					setProcessingState("idle");
 				}
 			} else {
 				throw new Error("Failed to create video");
@@ -116,7 +157,6 @@ export default function VideoGenerator() {
 				error instanceof Error ? error.message : String(error);
 			setError(errorMessage);
 			console.error(errorMessage);
-		} finally {
 			setProcessingState("idle");
 		}
 	}
@@ -130,7 +170,11 @@ export default function VideoGenerator() {
 						src={videoUrl}
 						className="w-full rounded-lg bg-[#18181b] shadow-lg"
 					/>
-					<a href={videoUrl} download className="">
+					<a
+						href={videoUrl}
+						download={videoId}
+						className="text-blue-400 hover:text-blue-300"
+					>
 						Download Video
 					</a>
 				</div>
@@ -157,6 +201,10 @@ export default function VideoGenerator() {
 				</div>
 			)}
 
+			{processingState === "loading-video" && (
+				<div className="text-center text-gray-400">Loading video...</div>
+			)}
+
 			<form onSubmit={handleGenerate} className="space-y-4">
 				<div className="flex gap-1 justify-center">
 					<input
@@ -177,6 +225,8 @@ export default function VideoGenerator() {
 						<option value="24h">Top 24H</option>
 						<option value="7d">Top 7D</option>
 						<option value="30d">Top 30D</option>
+						<option value="6m">Top 6M</option>
+						<option value="1y">Top 1Y</option>
 					</select>
 					<input
 						type="number"
