@@ -2,6 +2,7 @@
 
 import VideoGenerator from "@/components/VideoGenerator";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
 	const [showWarning, setShowWarning] = useState(true);
@@ -63,6 +64,13 @@ export default function Home() {
 					</div>
 				)}
 			</div>
+			<footer className="absolute bottom-0 left-0 right-0 w-full py-4 text-center text-gray-300 text-sm bg-[#424549]">
+				<div className="max-w-4xl mx-auto">
+					<Link href="/privacy-policy" className="hover:text-white">
+						Privacy Policy
+					</Link>
+				</div>
+			</footer>
 		</main>
 	);
 }
