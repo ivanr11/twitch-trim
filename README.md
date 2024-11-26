@@ -2,6 +2,8 @@
 
 A web application that gathers the most popular Twitch clips based on category and merges them into a single video with the option of uploading the compiled video to YouTube.
 
+![TwitchTrim home page](twitchtrim/public/assets/images/twitch-trim.png)
+
 ## Getting Started
 
 ### Prerequisites
